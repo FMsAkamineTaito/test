@@ -22,7 +22,7 @@ jobs:
         HEAD_SHA=${{ github.event.pull_request.head.sha }}
         CHANGED_FILES=$(git diff --name-only $BASE_SHA $HEAD_SHA)
         echo "Changed files: $CHANGED_FILES"
-        echo "::set-output name=has_specific_files::$(echo "$CHANGED_FILES" | grep -q 'specific/file/path' && echo true || echo false)"
+        echo "::set-output name=has_specific_files::$(echo "$CHANGED_FILES" | grep -q 'target_directory' && echo true || echo false)"
 
     - name: Add checkboxes to PR description
       if: steps.check_diff.outputs.has_specific_files == 'true'
