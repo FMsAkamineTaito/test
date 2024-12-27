@@ -1,0 +1,32 @@
+name: Add Checkboxes to PR
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  update-pr-description:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out the code
+      uses: actions/checkout@v3
+
+    - name: Check diff for specific files
+      id: check_diff
+      run: |
+        CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+        echo "Changed files: $CHANGED_FILES"
+        echo "::set-output name=has_specific_files::$(echo "$CHANGED_FILES" | grep -q 'targetDirectory/' && echo true || echo false)"
+
+    - name: Add checkboxes to PR description
+      if: steps.check_diff.outputs.has_specific_files == 'true'
+      uses: peter-evans/create-or-update-comment@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        issue-number: ${{ github.event.pull_request.number }}
+        body: |
+          ### このコメントは自動生成されたものです。
+          ### レビューを受けるスタッフは以下の観点を確認後チェックをつけてください。:
+          - [ ] Task 1
+          - [ ] Task 2
