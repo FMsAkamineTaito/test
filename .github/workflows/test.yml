@@ -105,10 +105,10 @@ jobs:
         script: |
           const allChecked = ${{ steps.check_boxes.outputs.all_checked }}
           
-          github.request('PATCH /repos/{owner}/{repo}/check-runs/${{ CHECK_RUN_ID }}', {
+          github.request('PATCH /repos/{owner}/{repo}/check-runs/${{ env.CHECK_RUN_ID }}', {
               owner: context.repo.owner,
               repo: context.repo.repo,
-              check_run_id: ${{ CHECK_RUN_ID }},
+              check_run_id: ${{ env.CHECK_RUN_ID }},
               status: 'completed',
               conclusion: 'success',
               completed_at: new Date().toISOString(),
