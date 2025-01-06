@@ -63,7 +63,7 @@ jobs:
             name: 'PR Checklist Status',
             head_sha: context.payload.pull_request.head.sha,
             status: 'completed',
-            external_id: context.payload.pull_request.number,
+            external_id: context.payload.pull_request.number.toString(),
             started_at: now.toISOString(),
             conclusion: 'failure',
             output: {
