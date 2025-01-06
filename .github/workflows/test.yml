@@ -44,7 +44,7 @@ jobs:
           ].join('\n')
 
           github.rest.pulls.update({
-            pull_number: context.issue.number,
+            pull_number: context.payload.pull_request.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
             body: body,
