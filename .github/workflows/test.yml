@@ -49,19 +49,19 @@ jobs:
             repo: context.repo.repo,
             body: body,
           })
-
-          github.rest.checks.create({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            name: 'PR Checklist Status',
-            head_sha: context.payload.pull_request.head.sha,
-            status: 'completed',
-            conclusion: 'failure',
-            output: {
-              title: '全ての項目を確認してください。',
-              summary: 'PR本文にあるチェック項目を確認してください。'
-            }
-          })
+ 
+          # github.rest.checks.create({
+          #   owner: context.repo.owner,
+          #   repo: context.repo.repo,
+          #   name: 'PR Checklist Status',
+          #   head_sha: context.payload.pull_request.head.sha,
+          #   status: 'completed',
+          #   conclusion: 'failure',
+          #   output: {
+          #     title: '全ての項目を確認してください。',
+          #     summary: 'PR本文にあるチェック項目を確認してください。'
+          #   }
+          # })
         
           # github.rest.repos.createCommitStatus({
           #   owner: context.repo.owner,
