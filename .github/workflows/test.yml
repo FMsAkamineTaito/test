@@ -96,7 +96,7 @@ jobs:
         id=$(echo "$body" | jq -r '.jobs[-1].id')
         
         echo "CHECK_RUN_ID=$id" >> $GITHUB_ENV
-
+        
     - name: Update status check based on checkboxes
       if: github.event.action != 'opened'
       uses: actions/github-script@v7
@@ -104,7 +104,7 @@ jobs:
         script: |
           const allChecked = ${{ steps.check_boxes.outputs.all_checked }}
           
-          github.request('PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}', {
+          github.request('PATCH /repos/{owner}/{repo}/check-runs/${{ CHECK_RUN_ID }}', {
               owner: context.repo.owner,
               repo: context.repo.repo,
               check_run_id: ${{ CHECK_RUN_ID }},
