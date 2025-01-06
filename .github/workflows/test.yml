@@ -116,7 +116,7 @@ jobs:
           const response = await github.request('GET /repos/{owner}/{repo}/commits/{ref}/check-suites', {
             owner: context.repo.owner,
             repo: context.repo.repo,
-            ref: ${GITHUB_SHA},
+            ref: ${GITHUB_SHA}
             })
           
           const result = response
