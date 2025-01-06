@@ -49,7 +49,8 @@ jobs:
       uses: actions/github-script@v7
       with:
         script: |
-          console.log("evenv", github.event.action)
+          console.log("event")
+          console.log(github.event.action)
           
           github.rest.checks.create({
             owner: context.repo.owner,
