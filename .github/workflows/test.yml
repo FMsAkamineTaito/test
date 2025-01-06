@@ -55,18 +55,41 @@ jobs:
       uses: actions/github-script@v7
       with:
         script: |
-          github.rest.checks.create({
+          const octokit = new Octokit({
+            auth: 'YOUR-TOKEN'
+          })
+          const now = new Date()
+          
+          await octokit.request('POST /repos/{context.repo.owner}/{context.repo.repo}/check-runs', {
             owner: context.repo.owner,
             repo: context.repo.repo,
             name: 'PR Checklist Status',
             head_sha: context.payload.pull_request.head.sha,
             status: 'completed',
+            external_id: context.payload.pull_request.number,
+            started_at: now.toISOString(),
             conclusion: 'failure',
             output: {
-              title: '全ての項目を確認してください。',
-              summary: 'PR本文にあるチェック項目を確認してください。'
+              title: 'PR Checklist Status',
+              summary: 'テスト',
+              text: 'テスト失敗'
+            },
+            headers: {
+              'X-GitHub-Api-Version': '2022-11-28'
             }
           })
+          # github.rest.checks.create({
+          #   owner: context.repo.owner,
+          #   repo: context.repo.repo,
+          #   name: 'PR Checklist Status',
+          #   head_sha: context.payload.pull_request.head.sha,
+          #   status: 'completed',
+          #   conclusion: 'failure',
+          #   output: {
+          #     title: '全ての項目を確認してください。',
+          #     summary: 'PR本文にあるチェック項目を確認してください。'
+          #   }
+          # })
           
     - name: Check PR description for completed checkboxes
       id: check_boxes
