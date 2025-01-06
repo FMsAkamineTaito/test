@@ -57,7 +57,7 @@ jobs:
         script: |
           const now = new Date()
           
-          await github.request('POST /repos/{context.repo.owner}/{context.repo.repo}/check-runs', {
+          await github.request('POST /repos/{owner}/{repo}/check-runs', {
             owner: context.repo.owner,
             repo: context.repo.repo,
             name: 'PR Checklist Status',
@@ -83,21 +83,21 @@ jobs:
           
           core.setOutput('all_checked', allCheckboxesChecked)
 
-    - name: Update status check based on checkboxes
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const allChecked = ${{ steps.check_boxes.outputs.all_checked }}
+    # - name: Update status check based on checkboxes
+    #   uses: actions/github-script@v7
+    #   with:
+    #     script: |
+    #       const allChecked = ${{ steps.check_boxes.outputs.all_checked }}
           
-          github.rest.checks.create({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            name: 'PR Checklist Status',
-            head_sha: context.payload.pull_request.head.sha,
-            status: 'completed',
-            conclusion: allChecked ? 'success' : 'failure',
-            output: {
-              title: allChecked ? '完了' : '未完了',
-              summary: allChecked ? '全ての項目が確認されました。' : '確認すべき項目が残っています。'
-            }
-          })
+    #       github.rest.checks.create({
+    #         owner: context.repo.owner,
+    #         repo: context.repo.repo,
+    #         name: 'PR Checklist Status',
+    #         head_sha: context.payload.pull_request.head.sha,
+    #         status: 'completed',
+    #         conclusion: allChecked ? 'success' : 'failure',
+    #         output: {
+    #           title: allChecked ? '完了' : '未完了',
+    #           summary: allChecked ? '全ての項目が確認されました。' : '確認すべき項目が残っています。'
+    #         }
+    #       })
