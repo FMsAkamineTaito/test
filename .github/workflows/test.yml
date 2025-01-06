@@ -82,20 +82,6 @@ jobs:
           const allCheckboxesChecked = !prBody.includes('- [ ]')
           
           core.setOutput('all_checked', allCheckboxesChecked)
-          
-    - name: Get the check run ID
-      id: get_check_run_id
-      run: |
-        URI="https://api.github.com"
-        API_HEADER="Accept: application/vnd.github.v3+json"
-        AUTH_HEADER="Authorization: token ${{ secrets.GITHUB_TOKEN }}"
-        
-        body=$(curl -sSL -H "${AUTH_HEADER}" -H "${API_HEADER}" \
-          "${URI}/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs")
-        
-        id=$(echo "$body" | jq -r '.jobs[-1].id')
-        
-        echo "CHECK_RUN_ID=$id" >> $GITHUB_ENV
         
     - name: Update status check based on checkboxes
       id: update_check
@@ -114,10 +100,10 @@ jobs:
             status: 'completed',
             external_id: context.payload.pull_request.number.toString(),
             started_at: now.toISOString(),
-            conclusion: 'success',
+            conclusion: allChecked ? 'success' : 'failure',
             output: {
               title: 'PR Checklist Status',
-              summary: 'テスト成功',
+              summary: allChecked ? 'テスト成功' : 'テスト失敗',
               text: ''
             }
           })
