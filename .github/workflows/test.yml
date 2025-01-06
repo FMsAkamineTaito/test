@@ -96,7 +96,7 @@ jobs:
         id=$(echo "$body" | jq -r '.jobs[-1].id')
         
         echo "CHECK_RUN_ID=$id" >> $GITHUB_ENV
-
+        
     - name: Update status check based on checkboxes
       if: github.event.action != 'opened'
       uses: actions/github-script@v7
@@ -104,16 +104,16 @@ jobs:
         script: |
           const allChecked = ${{ steps.check_boxes.outputs.all_checked }}
           
-          github.request('PATCH /repos/{owner}/{repo}/check-runs/${{ env.CHECK_RUN_ID }}', {
+          github.request('PATCH /repos/{owner}/{repo}/check-runs/${{ CHECK_RUN_ID }}', {
               owner: context.repo.owner,
               repo: context.repo.repo,
-              check_run_id: ${{ env.CHECK_RUN_ID }},
+              check_run_id: ${{ CHECK_RUN_ID }},
               status: 'completed',
               conclusion: 'success',
               completed_at: new Date().toISOString(),
               output: {
-                title: 'Mighty Readme Report - Success',
-                summary: 'The check run has completed successfully.',
-                text: 'All validations passed.'
+                title: '成功',
+                summary: '全ての項目が確認されました。',
+                text: ''
               }
             })
