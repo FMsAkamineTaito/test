@@ -114,6 +114,7 @@ jobs:
               output: {
                 title: '成功',
                 summary: '全ての項目が確認されました。',
-                text: ''
+                text: 'test'
               }
             })
+            
