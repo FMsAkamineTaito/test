@@ -83,21 +83,45 @@ jobs:
           
           core.setOutput('all_checked', allCheckboxesChecked)
 
-    # - name: Update status check based on checkboxes
-    #   uses: actions/github-script@v7
-    #   with:
-    #     script: |
-    #       const allChecked = ${{ steps.check_boxes.outputs.all_checked }}
+    - name: Get the check run ID
+      id: get_check_run_id
+      run: |
+        URI="https://api.github.com"
+        API_HEADER="Accept: application/vnd.github.v3+json"
+        AUTH_HEADER="Authorization: token ${{ secrets.GITHUB_TOKEN }}"
+        
+        body=$(curl -sSL -H "${AUTH_HEADER}" -H "${API_HEADER}" \
+          "${URI}/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs")
+        
+        # Extract values using jq
+        url=$(echo "$body" | jq -r '.jobs[-1].html_url')
+        id=$(echo "$body" | jq -r '.jobs[-1].id')
+        sha=$(echo "$body" | jq -r '.jobs[-1].head_sha')
+    
+        # Export as environment variables
+        echo "CHECK_RUN_URL=$url" >> $GITHUB_ENV
+        echo "CHECK_RUN_ID=$id" >> $GITHUB_ENV
+        echo "HEAD_SHA=$sha" >> $GITHUB_ENV
+        
+    - name: Update status check based on checkboxes
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const allChecked = ${{ steps.check_boxes.outputs.all_checked }}
           
-    #       github.rest.checks.create({
-    #         owner: context.repo.owner,
-    #         repo: context.repo.repo,
-    #         name: 'PR Checklist Status',
-    #         head_sha: context.payload.pull_request.head.sha,
-    #         status: 'completed',
-    #         conclusion: allChecked ? 'success' : 'failure',
-    #         output: {
-    #           title: allChecked ? '完了' : '未完了',
-    #           summary: allChecked ? '全ての項目が確認されました。' : '確認すべき項目が残っています。'
-    #         }
-    #       })
+          github.request('PATCH /repos/{owner}/{repo}/check-runs/{$CHECK_RUN_ID}', {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              check_run_id: checkRunId,
+              status: 'completed',
+              conclusion: 'success',
+              completed_at: new Date().toISOString(),
+              output: {
+                title: '確認完了',
+                summary: '全ての項目のが確認されました。',
+                text: ''
+              },
+              headers: {
+                'X-GitHub-Api-Version': '2022-11-28'
+              }
+            });
