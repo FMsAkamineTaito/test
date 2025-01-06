@@ -44,14 +44,14 @@ jobs:
             '- [ ] Task 1', 
             '- [ ] Task 2',
           ].join('\n')
-
+          
           github.rest.pulls.update({
             pull_number: context.payload.pull_request.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
             body: body,
           })
-
+          
           # デフォルトでステータス失敗
           throw new Error('確認されていない項目があります。')
         
