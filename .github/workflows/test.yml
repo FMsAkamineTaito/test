@@ -72,29 +72,30 @@ jobs:
               text: 'テスト失敗'
             }
           })
-    # - name: Check PR description for completed checkboxes
-    #   id: check_boxes
-    #   uses: actions/github-script@v7
-    #   with:
-    #     script: |
-    #       const prBody = context.payload.pull_request.body || ''
-    #       const allCheckboxesChecked = !prBody.includes('- [ ]')
+    
+    - name: Check PR description for completed checkboxes
+      id: check_boxes
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const prBody = context.payload.pull_request.body || ''
+          const allCheckboxesChecked = !prBody.includes('- [ ]')
           
-    #       core.setOutput('all_checked', allCheckboxesChecked)
-
-    # - name: Get the check run ID
-    #   id: get_check_run_id
-    #   run: |
-    #     URI="https://api.github.com"
-    #     API_HEADER="Accept: application/vnd.github.v3+json"
-    #     AUTH_HEADER="Authorization: token ${{ secrets.GITHUB_TOKEN }}"
+          core.setOutput('all_checked', allCheckboxesChecked)
+          
+    - name: Get the check run ID
+      id: get_check_run_id
+      run: |
+        URI="https://api.github.com"
+        API_HEADER="Accept: application/vnd.github.v3+json"
+        AUTH_HEADER="Authorization: token ${{ secrets.GITHUB_TOKEN }}"
         
-    #     body=$(curl -sSL -H "${AUTH_HEADER}" -H "${API_HEADER}" \
-    #       "${URI}/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs")
+        body=$(curl -sSL -H "${AUTH_HEADER}" -H "${API_HEADER}" \
+          "${URI}/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs")
         
-    #     id=$(echo "$body" | jq -r '.jobs[-1].id')
+        id=$(echo "$body" | jq -r '.jobs[-1].id')
         
-    #     echo "CHECK_RUN_ID=$id" >> $GITHUB_ENV
+        echo "CHECK_RUN_ID=$id" >> $GITHUB_ENV
         
     # - name: Update status check based on checkboxes
     #   if: github.event.action != 'opened'
