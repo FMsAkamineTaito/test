@@ -98,22 +98,27 @@ jobs:
         echo "CHECK_RUN_ID=$id" >> $GITHUB_ENV
         
     - name: Update status check based on checkboxes
+      id: update_check
       if: github.event.action != 'opened'
       uses: actions/github-script@v7
       with:
         script: |
           const allChecked = ${{ steps.check_boxes.outputs.all_checked }}
+          const now = new Date()
           
-          github.request('PATCH /repos/{owner}/{repo}/check-runs/${{ CHECK_RUN_ID }}', {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              check_run_id: ${{ CHECK_RUN_ID }},
-              status: 'completed',
-              conclusion: 'success',
-              completed_at: new Date().toISOString(),
-              output: {
-                title: '成功',
-                summary: '全ての項目が確認されました。',
-                text: ''
-              }
-            })
+          await github.request('POST /repos/{owner}/{repo}/check-runs', {
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            name: 'PR Checklist Status',
+            head_sha: context.payload.pull_request.head.sha,
+            status: 'completed',
+            external_id: context.payload.pull_request.number.toString(),
+            started_at: now.toISOString(),
+            conclusion: 'success',
+            output: {
+              title: 'PR Checklist Status',
+              summary: 'テスト成功',
+              text: ''
+            }
+          })
+            
