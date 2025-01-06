@@ -5,7 +5,7 @@ on:
     types: [opened, edited, synchronize]
 
 jobs:
-  update-pr-description:
+  observe-pull-request:
     runs-on: ubuntu-latest
 
     steps:
@@ -44,14 +44,6 @@ jobs:
             body: body,
           })
 
-    - name: Set initial status check to failed
-      if: steps.check_diff.outputs.has_specific_files == 'true' && github.event_name == 'pull_request' && github.event.pull_request.state == 'open'
-      uses: actions/github-script@v7
-      with:
-        script: |
-          console.log("event")
-          console.log(context.payload.action)
-          
           github.rest.checks.create({
             owner: context.repo.owner,
             repo: context.repo.repo,
@@ -64,6 +56,27 @@ jobs:
               summary: 'Please complete all checklist items in the PR description'
             }
           })
+
+    # - name: Set initial status check to failed
+    #   if: steps.check_diff.outputs.has_specific_files == 'true' && github.event_name == 'pull_request' && github.event.pull_request.state == 'open'
+    #   uses: actions/github-script@v7
+    #   with:
+    #     script: |
+    #       console.log("event")
+    #       console.log(context.payload.action)
+          
+    #       github.rest.checks.create({
+    #         owner: context.repo.owner,
+    #         repo: context.repo.repo,
+    #         name: 'PR Checklist Status',
+    #         head_sha: context.payload.pull_request.head.sha,
+    #         status: 'completed',
+    #         conclusion: 'failure',
+    #         output: {
+    #           title: 'Checklist items not completed',
+    #           summary: 'Please complete all checklist items in the PR description'
+    #         }
+    #       })
 
     - name: Check PR description for completed checkboxes
       id: check_boxes
