@@ -92,25 +92,22 @@ jobs:
         
         body=$(curl -sSL -H "${AUTH_HEADER}" -H "${API_HEADER}" \
           "${URI}/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs")
-          
-        url=$(echo "$body" | jq -r '.jobs[-1].html_url')
-        id=$(echo "$body" | jq -r '.jobs[-1].id')
-        sha=$(echo "$body" | jq -r '.jobs[-1].head_sha')
         
-        echo "CHECK_RUN_URL=$url" >> $GITHUB_ENV
+        id=$(echo "$body" | jq -r '.jobs[-1].id')
+        
         echo "CHECK_RUN_ID=$id" >> $GITHUB_ENV
-        echo "HEAD_SHA=$sha" >> $GITHUB_ENV
 
     - name: Update status check based on checkboxes
+      if: github.event.action != 'opened'
       uses: actions/github-script@v7
       with:
         script: |
           const allChecked = ${{ steps.check_boxes.outputs.all_checked }}
           
-          github.request('PATCH /repos/{owner}/{repo}/check-runs/${{ env.CHECK_RUN_URL }}', {
+          github.request('PATCH /repos/{owner}/{repo}/check-runs/${{ env.CHECK_RUN_ID }}', {
               owner: context.repo.owner,
               repo: context.repo.repo,
-              check_run_id: ${{ env.CHECK_RUN_URL }},
+              check_run_id: ${{ env.CHECK_RUN_ID }},
               status: 'completed',
               conclusion: 'success',
               completed_at: new Date().toISOString(),
