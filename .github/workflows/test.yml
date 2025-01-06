@@ -103,17 +103,19 @@ jobs:
       with:
         script: |
           const allChecked = ${{ steps.check_boxes.outputs.all_checked }}
+
+          const checkRunId = context.payload.check_run.id
           
-          github.request('PATCH /repos/{owner}/{repo}/check-runs/${{ env.CHECK_RUN_ID }}', {
+          github.request('PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}', {
               owner: context.repo.owner,
               repo: context.repo.repo,
-              check_run_id: ${{ env.CHECK_RUN_ID }},
+              check_run_id: checkRunId,
               status: 'completed',
               conclusion: 'success',
               completed_at: new Date().toISOString(),
               output: {
-                title: 'Mighty Readme Report - Success',
-                summary: 'The check run has completed successfully.',
-                text: 'All validations passed.'
+                title: '成功',
+                summary: '全ての項目が確認されました。',
+                text: ''
               }
             })
