@@ -48,18 +48,28 @@ jobs:
             body: body,
           })
 
-          github.rest.checks.create({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            name: 'PR Checklist Status',
-            head_sha: context.payload.pull_request.head.sha,
-            status: 'completed',
-            conclusion: 'failure',
-            output: {
-              title: 'Checklist items not completed',
-              summary: 'Please complete all checklist items in the PR description'
-            }
-          })
+          try {
+            console.log("Creating check run...");
+            console.log("Head SHA:", context.payload.pull_request.head.sha);
+            
+            const result = await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'PR Checklist Status',
+              head_sha: context.payload.pull_request.head.sha,
+              status: 'completed',
+              conclusion: 'failure',
+              output: {
+                title: 'Checklist items not completed',
+                summary: 'Please complete all checklist items in the PR description'
+              }
+            });
+            
+            console.log("Check run created successfully:", result);
+          } catch (error) {
+            console.error("Error creating check run:", error);
+            throw error;
+          }
 
     # - name: Set initial status check to failed
     #   if: steps.check_diff.outputs.has_specific_files == 'true' && github.event_name == 'pull_request' && github.event.pull_request.state == 'open'
