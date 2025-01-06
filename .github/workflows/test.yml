@@ -6,7 +6,9 @@ on:
 
 permissions:
   checks: write 
+  statuses: write
   pull-requests: write
+  contents: read
 
 jobs:
   observe-pull-request:
@@ -41,35 +43,19 @@ jobs:
             '- [ ] Task 2',
           ].join('\n')
           
-          github.rest.pulls.update({
-            pull_number: context.issue.number,
+    - name: Set initial status check to failed
+      uses: actions/github-script@v7
+      with:
+        script: |
+          await github.rest.repos.createCommitStatus({
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: body,
-          })
-
-          try {
-            console.log("Creating check run...");
-            console.log("Head SHA:", context.payload.pull_request.head.sha);
-            
-            const result = await github.rest.checks.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              name: 'PR Checklist Status',
-              head_sha: context.payload.pull_request.head.sha,
-              status: 'completed',
-              conclusion: 'failure',
-              output: {
-                title: 'Checklist items not completed',
-                summary: 'Please complete all checklist items in the PR description'
-              }
-            });
-            
-            console.log("Check run created successfully:", result);
-          } catch (error) {
-            console.error("Error creating check run:", error);
-            throw error;
-          }
+            sha: context.payload.pull_request.head.sha,
+            state: 'failure',
+            context: 'PR Checklist Requirements',
+            description: '全ての項目を確認する必要があります。',
+            target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${context.payload.pull_request.number}`
+          });
 
     # - name: Set initial status check to failed
     #   if: steps.check_diff.outputs.has_specific_files == 'true' && github.event_name == 'pull_request' && github.event.pull_request.state == 'open'
