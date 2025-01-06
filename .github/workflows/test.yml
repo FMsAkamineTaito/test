@@ -104,6 +104,7 @@ jobs:
       with:
         script: |
           const allChecked = ${{ steps.check_boxes.outputs.all_checked }}
+          const now = new Date()
           
           await github.request('POST /repos/{owner}/{repo}/check-runs', {
             owner: context.repo.owner,
