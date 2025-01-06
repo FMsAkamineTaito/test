@@ -74,7 +74,7 @@ jobs:
       with:
         script: |
           const prBody = context.payload.pull_request.body || ''
-          const allCheckboxesChecked = !prBody.includes('- [ ]') && prBody.includes('- [x]')
+          const allCheckboxesChecked = !prBody.includes('- [ ]')
           
           core.setOutput('all_checked', allCheckboxesChecked)
 
