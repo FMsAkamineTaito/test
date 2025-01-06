@@ -52,7 +52,6 @@ jobs:
             body: body,
           })
           
-          # デフォルトでステータス失敗
           throw new Error('確認されていない項目があります。')
         
     - name: Update status check based on checkboxes
