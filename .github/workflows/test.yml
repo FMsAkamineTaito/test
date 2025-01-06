@@ -31,7 +31,7 @@ jobs:
       with:
         script: |
           const body = [
-            context.payloa.pull_request.body,
+            context.payload.pull_request.body,
             '### 以下の項目を確認してください',
             '- [ ] Task 1', 
             '- [ ] Task 2',
