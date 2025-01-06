@@ -90,16 +90,13 @@ jobs:
         API_HEADER="Accept: application/vnd.github.v3+json"
         AUTH_HEADER="Authorization: token ${{ secrets.GITHUB_TOKEN }}"
         
-        # Fetch job details
         body=$(curl -sSL -H "${AUTH_HEADER}" -H "${API_HEADER}" \
           "${URI}/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs")
-        
-        # Extract values using jq
+          
         url=$(echo "$body" | jq -r '.jobs[-1].html_url')
         id=$(echo "$body" | jq -r '.jobs[-1].id')
         sha=$(echo "$body" | jq -r '.jobs[-1].head_sha')
-    
-        # Export as environment variables
+        
         echo "CHECK_RUN_URL=$url" >> $GITHUB_ENV
         echo "CHECK_RUN_ID=$id" >> $GITHUB_ENV
         echo "HEAD_SHA=$sha" >> $GITHUB_ENV
@@ -110,10 +107,10 @@ jobs:
         script: |
           const allChecked = ${{ steps.check_boxes.outputs.all_checked }}
           
-          github.request('PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}', {
+          github.request('PATCH /repos/{owner}/{repo}/check-runs/{$CHECK_RUN_ID}', {
               owner: context.repo.owner,
               repo: context.repo.repo,
-              check_run_id: checkRunId,
+              check_run_id: $CHECK_RUN_ID,
               status: 'completed',
               conclusion: 'success',
               completed_at: new Date().toISOString(),
