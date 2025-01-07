@@ -34,7 +34,7 @@ jobs:
         echo
 
     - name: Add checkboxes to PR description
-      if: steps.check_diff.outputs.has_specific_files == 'true' &&　github.event.action == 'opened'
+      if: steps.check_diff.outputs.has_specific_files == 'true' && github.event.action == 'opened'
       uses: actions/github-script@v7
       with:
         script: |
