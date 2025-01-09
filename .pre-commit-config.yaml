@@ -4,3 +4,4 @@ repos:
     hooks:
       - id: pr-status-check
         name: pre-commit-test
+        stages: [pre-merge-commit]
