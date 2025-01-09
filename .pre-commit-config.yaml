@@ -1,7 +1,7 @@
 repos:
   - repo: https://github.com/FMsAkamineTaito/pre-commit-test
-    rev: 25a3e1f0937fe017556ca302691872e93de8f618
+    rev: 9afe267d87e6bf786cb82b637058603e7effe215
     hooks:
       - id: pr-status-check
         name: pre-commit-test
-        stages: [pre-merge-commit]
+        stages: [prepare-commit-msg]
