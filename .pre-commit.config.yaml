@@ -1,0 +1,8 @@
+repos:
+  - repo: https://github.com/FMsAkamineTaito/pre-commit-test
+    rev: 51cc913d4a4ff20c127961247930cd6f6b6fef92
+    hooks:
+      - id: pr-status-check
+        stages: [pre-merge-commit]
+        args:
+          - "$(cat .git/MERGE_MSG)"
