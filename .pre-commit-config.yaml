@@ -5,5 +5,3 @@ repos:
       - id: pr-status-check
         name: pre-commit-test
         stages: [pre-merge-commit]
-        args:
-          - "$(cat .git/MERGE_MSG)"
