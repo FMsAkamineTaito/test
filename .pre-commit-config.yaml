@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/FMsAkamineTaito/pre-commit-test
-    rev: 709ab6bcfd27f92d4d18c900a4d3c4f8e9fa7d45
+    rev: a743488d21ef27128b560dd05522698f60643551
     hooks:
       - id: pr-status-check
         name: pre-commit-test
