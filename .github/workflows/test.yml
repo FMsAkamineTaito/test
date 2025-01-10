@@ -23,13 +23,6 @@ jobs:
       uses: actions/github-script@v7
       with:
         script: |
-          const prResponse = await github.rest.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: context.payload.pull_request.number
-              });
-          const prAuthor = prResponse.data.user.login;
-          
           const commitLists = await github.rest.pulls.listCommits({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -44,7 +37,7 @@ jobs:
               console.log("email ", commitAuthorEmail)
               console.log("#######")
           
-              return commitAuthor === prAuthor && commitAuthorEmail.includes("@fullmarks.co.jp") 
+              return commitAuthorEmail.includes("@fullmarks.co.jp") 
           })
           
           console.log(isAllCommitFromFms)
