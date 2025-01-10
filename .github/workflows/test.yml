@@ -22,10 +22,11 @@ jobs:
       id: check_is_fms
       run: |
         echo "check pr author"
-        echo ${{ toJson(github.event.pull_request) }}
+#        echo ${{ toJson(github.event.pull_request) }}
         echo ${{ toJson(github.event.pull_request.user) }}
+        
         echo ${{ github.event.pull_request.user.email }}
-        echo ${{ toJson(github.event.sender) }}
+#        echo ${{ toJson(github.event.sender) }}
         
 
     - name: Fetch all history
