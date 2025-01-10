@@ -20,7 +20,7 @@ jobs:
 
     - name: Check PR Author is FMs member
       id: check_is_fms
-      uses: actions/github-script@7
+      uses: actions/github-script@v7
       with:
         script: |
           console.log("check")
