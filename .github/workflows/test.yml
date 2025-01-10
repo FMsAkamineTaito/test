@@ -36,25 +36,26 @@ jobs:
                 pull_number: context.payload.pull_request.number
           });
           
-          commitLists["data"].forEach((commit) => {
-              commitAuthor = commit["commit"]["author"]["name"]
-          
-              if (commit_author === prAuthor && commit) {
-                  commitAuthorEmail = commit["commit"]["author"]["email"]
-          
-                  if (commitAuthorEmail.includes("@fullmarks.co.jp")){
-                      return true            
-                  }
-              }
-          })
-          return false
+          console.log(JSON.stringify(commitLists))
+#          commitLists["data"].forEach((commit) => {
+#              commitAuthor = commit["commit"]["author"]["name"]
+#
+#              if (commit_author === prAuthor && commit) {
+#                  commitAuthorEmail = commit["commit"]["author"]["email"]
+#
+#                  if (commitAuthorEmail.includes("@fullmarks.co.jp")){
+#                      return true
+#                  }
+#              }
+#          })
+#          return false
 
-    - name: Exit if not fms member
-      id: exit
-      if: ${{ !fromJSON(steps.check_is_fms.outputs.result) }}
-      run: |
-        echo "Skip because Author is not FMs employee"
-        exit 0
+#    - name: Exit if not fms member
+#      id: exit
+#      if: ${{ !fromJSON(steps.check_is_fms.outputs.result) }}
+#      run: |
+#        echo "Skip because Author is not FMs employee"
+#        exit 0
 
     - name: Fetch all history
       run: git fetch --prune --unshallow
