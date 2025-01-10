@@ -23,26 +23,38 @@ jobs:
       uses: actions/github-script@v7
       with:
         script: |
-          console.log("check")
           const prResponse = await github.rest.pulls.get({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 pull_number: context.payload.pull_request.number
               });
-          const authorName = prResponse.data.user.login;
+          const prAuthor = prResponse.data.user.login;
           
           const commitLists = await github.rest.pulls.listCommits({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 pull_number: context.payload.pull_request.number
           });
-          console.log("check")
-          console.log(JSON.stringify(commitLists))
-
-#          commitLists.forEach((commit) => {
-#
-#              })
           
+          commitLists["data"].forEach((commit) => {
+              commitAuthor = commit["commit"]["author"]["name"]
+          
+              if (commit_author === prAuthor && commit) {
+                  commitAuthorEmail = commit["commit"]["author"]["email"]
+          
+                  if (commitAuthorEmail.includes("@fullmarks.co.jp")){
+                      return true            
+                  }
+              }
+          })
+          return false
+
+    - name: Exit if not fms member
+      id: exit
+      if: ${{ !fromJSON(steps.check_is_fms.outputs.result) }}
+      run: |
+        echo "Skip because Author is not FMs employee"
+        exit 0
 
     - name: Fetch all history
       run: git fetch --prune --unshallow
