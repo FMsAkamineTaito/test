@@ -37,8 +37,8 @@ jobs:
           });
           
           const isAllCommitFromFms = commitLists["data"].every((commit) => {
-              commitAuthor = commit["commit"]["author"]["name"]
-              commitAuthorEmail = commit["commit"]["author"]["email"]
+              const commitAuthor = commit["commit"]["author"]["name"]
+              const commitAuthorEmail = commit["commit"]["author"]["email"]
           
               console.log("author ", commitAuthor)
               console.log("email ", commitAuthorEmail)
