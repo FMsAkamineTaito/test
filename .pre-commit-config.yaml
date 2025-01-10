@@ -5,3 +5,5 @@ repos:
       - id: pr-status-check
         name: pre-commit-test
         stages: [prepare-commit-msg]
+        verbose: true
+        log_file: /Users/akaminetaito/Desktop/log.txt
