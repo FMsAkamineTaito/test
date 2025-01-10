@@ -20,14 +20,29 @@ jobs:
 
     - name: Check PR Author is FMs member
       id: check_is_fms
-      run: |
-        echo "check pr author"
-#        echo ${{ toJson(github.event.pull_request) }}
-        echo ${{ toJson(github.event.pull_request.user) }}
-        
-        echo ${{ github.event.pull_request.user.email }}
-#        echo ${{ toJson(github.event.sender) }}
-        
+      uses: actions/github-script@7
+      with:
+        script: |
+          console.log("check")
+          const prResponse = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number
+              });
+          const authorName = prResponse.data.user.login;
+          
+          const commitLists = await github.rest.pulls.listCommits({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number
+          });
+          console.log("check")
+          console.log(JSON.stringify(commitLists))
+
+#          commitLists.forEach((commit) => {
+#
+#              })
+          
 
     - name: Fetch all history
       run: git fetch --prune --unshallow
