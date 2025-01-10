@@ -40,6 +40,10 @@ jobs:
               commitAuthor = commit["commit"]["author"]["name"]
               commitAuthorEmail = commit["commit"]["author"]["email"]
           
+              console.log("author ", commitAuthor)
+              console.log("email ", commitAuthorEmail)
+              console.log("#######")
+          
               return commitAuthor === prAuthor && commitAuthorEmail.includes("@fullmarks.co.jp") 
           })
           
