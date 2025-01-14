@@ -84,7 +84,7 @@ jobs:
               const checklists = data.setting.filter(item => item.path.includes(directory))
 
               checklists.forEach((checklist) => {
-                comment.push(checklist)
+                comments.push(checklist)
               })
             })
             
