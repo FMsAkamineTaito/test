@@ -86,7 +86,7 @@ jobs:
 
             changedDirectories.forEach((directory) => {
               const targetConfig = config.setting.find(item => item.path === directory)
-              commemts.push(...(targetConfig.checklists))
+              comments.push(...(targetConfig.checklists))
             })
             
             const body = comments.join('\n')
