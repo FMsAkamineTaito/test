@@ -85,7 +85,7 @@ jobs:
             ]
 
             changedDirectories.forEach((directory) => {
-              const tartgetConfigs = config.setting.filter(item => item.path.includes(directory))
+              const targetConfigs = config.setting.filter(item => item.path.includes(directory))
 
               targetConfigs.forEach((item) => {                
                 comments.push(...(item.checklists))
