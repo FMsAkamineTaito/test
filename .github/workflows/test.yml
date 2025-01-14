@@ -86,6 +86,11 @@ jobs:
 
             changedDirectories.forEach((directory) => {
               const targetConfig = config.setting.find(item => item.path === directory)
+
+              if (!targetConfig) {
+                continue
+              }
+
               comments.push(...(targetConfig.checklists))
             })
             
@@ -115,4 +120,6 @@ jobs:
             } else {
               throw new Error('確認されていない項目があります。')
             }
-            
+notifications:
+  emails:
+    - false
