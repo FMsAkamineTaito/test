@@ -120,6 +120,3 @@ jobs:
             } else {
               throw new Error('確認されていない項目があります。')
             }
-notifications:
-  emails:
-    - false
