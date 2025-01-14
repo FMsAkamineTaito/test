@@ -68,7 +68,7 @@ jobs:
             const fs = require('fs');
 
             // 環境変数から差分があるディレクトリを取得
-            const changedDirectories = process.env.changed_directories.split('\n').filter(Boolean);
+            const changedDirectories = steps.check_diff.outputs.changed_directories.split(',').filter(Boolean);
             
             // checklists.yamlファイルを読み取る
             const fileContents = fs.readFileSync('setting/github_action_setting.json', 'utf8');
