@@ -21,4 +21,3 @@ repos:
             sleep 5
           '
         language: system
-        stages: [pre-merge-commit]
