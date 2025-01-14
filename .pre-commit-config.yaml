@@ -4,7 +4,7 @@ repos:
     hooks:
       - id: pr-status-check
         name: pre-commit-test
-        stages: [prepare-commit-msg]
+        stages: [prepare-commit-msg, pre-merge-commit]
   - repo: local
     hooks:
       - id: handle-merge-failure
