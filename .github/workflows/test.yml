@@ -69,10 +69,14 @@ jobs:
 
             // 環境変数から差分があるディレクトリを取得
             const changedDirectories = process.env.changed_directories.split(',').filter(Boolean);
+
+            if (!changedDirectories){
+              return
+            }
             
             // checklists.yamlファイルを読み取る
             const fileContents = fs.readFileSync('setting/github_action_setting.json', 'utf8');
-            const data = JSON.parse(fileContents);
+            const config = JSON.parse(fileContents);
 
 
             const comments = [
@@ -81,10 +85,10 @@ jobs:
             ]
 
             changedDirectories.forEach((directory) => {
-              const checklists = data.setting.filter(item => item.path.includes(directory))
+              const tartgetConfigs = config.setting.filter(item => item.path.includes(directory))
 
-              checklists.forEach((checklist) => {
-                comments.push(checklist)
+              targetConfigs.forEach((item) => {                
+                comments.push(...(item.checklists))
               })
             })
             
