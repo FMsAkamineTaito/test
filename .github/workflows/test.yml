@@ -66,14 +66,13 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const yaml = require('js-yaml');
 
             // 環境変数から差分があるディレクトリを取得
             const changedDirectories = process.env.changed_directories.split('\n').filter(Boolean);
             
             // checklists.yamlファイルを読み取る
-            const fileContents = fs.readFileSync('setting/github_action_setting.yaml', 'utf8');
-            const data = yaml.load(fileContents);
+            const fileContents = fs.readFileSync('setting/github_action_setting.json', 'utf8');
+            const data = JSON.parse(fileContents);
 
 
             const comments = [
