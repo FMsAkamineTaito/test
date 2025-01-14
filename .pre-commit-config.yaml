@@ -20,4 +20,4 @@ repos:
             ls .git/
           '
         language: system
-        stages: [commit-msg]
+        stages: [pre-push]
