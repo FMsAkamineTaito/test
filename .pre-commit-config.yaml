@@ -4,20 +4,20 @@ repos:
     hooks:
       - id: pr-status-check
         name: pre-commit-test
-        stages: [post-checkout]
+        stages: [pre-commit, prepare-commit-msg]
         always_run: true
         verbose: true
         log_file: /Users/akaminetaito/Desktop/log.txt
-  - repo: local
-    hooks:
-      - id: handle-merge-failure
-        name: handle-merge-failure
-        entry: |
-          bash -c '
-            echo "handle-merge-failure"
-            echo "handle-merge-failure" > "/Users/akaminetaito/Desktop/log.txt";
-            echo $(ls .git/) > "/Users/akaminetaito/Desktop/log.txt";
-            ls .git/
-            sleep 5
-          '
-        language: system
+  # - repo: local
+  #   hooks:
+  #     - id: handle-merge-failure
+  #       name: handle-merge-failure
+  #       entry: |
+  #         bash -c '
+  #           echo "handle-merge-failure"
+  #           echo "handle-merge-failure" > "/Users/akaminetaito/Desktop/log.txt";
+  #           echo $(ls .git/) > "/Users/akaminetaito/Desktop/log.txt";
+  #           ls .git/
+  #           sleep 5
+  #         '
+  #       language: system
