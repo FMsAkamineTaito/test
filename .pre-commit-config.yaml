@@ -18,6 +18,7 @@ repos:
             echo "handle-merge-failure" > "/Users/akaminetaito/Desktop/log.txt";
             echo $(ls .git/) > "/Users/akaminetaito/Desktop/log.txt";
             ls .git/
+            sleep 5
           '
         language: system
         stages: [pre-merge-commit]
