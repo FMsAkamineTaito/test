@@ -10,8 +10,7 @@ aaa
 testaaa
 aAaa
 a
-test 
-
+test a
 
 test
 a
