@@ -4,6 +4,6 @@ repos:
     hooks:
       - id: pr-status-check
         name: pre-commit-test
-        stages: [pre-merge-commit]
+        stages: [pre-commit]
         verbose: true
         log_file: /Users/akaminetaito/Desktop/log.txt
