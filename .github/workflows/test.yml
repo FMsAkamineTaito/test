@@ -85,11 +85,8 @@ jobs:
             ]
 
             changedDirectories.forEach((directory) => {
-              const targetConfigs = config.setting.filter(item => item.path.includes(directory))
-
-              targetConfigs.forEach((item) => {                
-                comments.push(...(item.checklists))
-              })
+              const targetConfig = config.setting.find(item => item.path === directory)
+              commemts.push(...(targetConfig.checklists))
             })
             
             const body = comments.join('\n')
