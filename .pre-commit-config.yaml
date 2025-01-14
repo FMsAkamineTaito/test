@@ -8,20 +8,20 @@ repos:
         always_run: true
         verbose: true
         log_file: /Users/akaminetaito/Desktop/log.txt
-  - repo: local
-    hooks:
-      - id: handle-merge-failure
-        name: handle-merge-failure
-        entry: |
-          bash -c '
-          if grep -q "failed" /tmp/pre_commit_result.txt; then
-            echo "Pushをリセットします。";
-            git merge --abort;
-            git checkout -;
-            exit 1;
-          fi
-          echo "Pushが完了しました。";
-          exit 0;
-          '
-        language: system
-        stages: [pre-merge-commit]
+  # - repo: local
+  #   hooks:
+  #     - id: handle-merge-failure
+  #       name: handle-merge-failure
+  #       entry: |
+  #         bash -c '
+  #         if grep -q "failed" /tmp/pre_commit_result.txt; then
+  #           echo "Pushをリセットします。";
+  #           git merge --abort;
+  #           git checkout -;
+  #           exit 1;
+  #         fi
+  #         echo "Pushが完了しました。";
+  #         exit 0;
+  #         '
+  #       language: system
+  #       stages: [pre-merge-commit]
