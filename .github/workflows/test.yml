@@ -52,21 +52,50 @@ jobs:
           HEAD_SHA=${{ github.event.pull_request.head.sha }}
           CHANGED_FILES=$(git diff --name-only $BASE_SHA $HEAD_SHA)
           echo "Changed files: $CHANGED_FILES"
-          echo "has_specific_files=$(echo "$CHANGED_FILES" | grep -q 'target_directory' && echo true || echo false)" >> $GITHUB_OUTPUT
-          echo
+
+          # 差分があるディレクトリを抽出して環境変数に格納
+          CHANGED_DIRECTORIES=$(echo "$CHANGED_FILES" | grep -o '^[^/]*' | sort -u | tr '\n' ',' | sed 's/,$//')
+          echo "Changed directories: $CHANGED_DIRECTORIES"
+          
+          # 環境変数にセット
+          echo "changed_directories=$CHANGED_DIRECTORIES" >> $GITHUB_ENV
 
       - name: Add checkboxes to PR description
-        if: steps.check_diff.outputs.has_specific_files == 'true' && github.event.action == 'opened'
+        if: github.event.action == 'opened'
         uses: actions/github-script@v7
         with:
           script: |
-            const body = [
+            const fs = require('fs');
+
+            // 環境変数から差分があるディレクトリを取得
+            const changedDirectories = process.env.changed_directories.split(',').filter(Boolean);
+
+            if (!changedDirectories){
+              return
+            }
+            
+            // checklists.yamlファイルを読み取る
+            const fileContents = fs.readFileSync('setting/github_action_setting.json', 'utf8');
+            const config = JSON.parse(fileContents);
+
+
+            const comments = [
               context.payload.pull_request.body,
               '### 以下の項目を確認してください',
-              '- [ ] Task 1', 
-              '- [ ] Task 2',
-            ].join('\n')
+            ]
+
+            changedDirectories.forEach((directory) => {
+              const targetConfig = config.setting.find(item => item.path === directory)
+
+              if (!targetConfig) {
+                return
+              }
+
+              comments.push(...(targetConfig.checklists))
+            })
             
+            const body = comments.join('\n')
+
             github.rest.pulls.update({
               pull_number: context.payload.pull_request.number,
               owner: context.repo.owner,
@@ -91,4 +120,3 @@ jobs:
             } else {
               throw new Error('確認されていない項目があります。')
             }
-            
