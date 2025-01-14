@@ -58,7 +58,7 @@ jobs:
           echo "Changed directories: $CHANGED_DIRECTORIES"
           
           # 環境変数にセット
-          echo "changed_directories=$CHANGED_DIRECTORIES" >> $GITHUB_OUTPUT
+          echo "changed_directories=$CHANGED_DIRECTORIES" >> $GITHUB_ENV
 
       - name: Add checkboxes to PR description
         if: github.event.action == 'opened'
@@ -68,7 +68,7 @@ jobs:
             const fs = require('fs');
 
             // 環境変数から差分があるディレクトリを取得
-            const changedDirectories = steps.check_diff.outputs.changed_directories.split(',').filter(Boolean);
+            const changedDirectories = process.env.changed_directories.split(',').filter(Boolean);
             
             // checklists.yamlファイルを読み取る
             const fileContents = fs.readFileSync('setting/github_action_setting.json', 'utf8');
