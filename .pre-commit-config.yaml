@@ -20,4 +20,4 @@ repos:
             ls .git/
           '
         language: system
-        stages: [pre-push]
+        stages: [pre-merge-commit]
