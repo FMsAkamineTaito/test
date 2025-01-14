@@ -54,14 +54,14 @@ jobs:
           echo "Changed files: $CHANGED_FILES"
 
           # 差分があるディレクトリを抽出して環境変数に格納
-          CHANGED_DIRECTORIES=$(echo "$CHANGED_FILES" | grep -o '^[^/]*' | sort -u)
+          CHANGED_DIRECTORIES=$(echo "$CHANGED_FILES" | grep -o '^[^/]*' | sort -u | tr '\n' ',' | sed 's/,$//')
           echo "Changed directories: $CHANGED_DIRECTORIES"
           
           # 環境変数にセット
           echo "changed_directories=$CHANGED_DIRECTORIES" >> $GITHUB_OUTPUT
 
       - name: Add checkboxes to PR description
-        if: steps.check_diff.outputs.has_specific_files == 'true' && github.event.action == 'opened'
+        if: github.event.action == 'opened'
         uses: actions/github-script@v7
         with:
           script: |
