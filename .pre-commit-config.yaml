@@ -15,8 +15,8 @@ repos:
         entry: |
           bash -c '
             echo "handle-merge-failure"
-            "handle-merge-failure" > "/Users/akaminetaito/Desktop/log.txt";
-            $(ls .git/) > "/Users/akaminetaito/Desktop/log.txt";
+            echo "handle-merge-failure" > "/Users/akaminetaito/Desktop/log.txt";
+            echo $(ls .git/) > "/Users/akaminetaito/Desktop/log.txt";
             ls .git/
           '
         language: system
