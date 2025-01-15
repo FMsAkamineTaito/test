@@ -62,48 +62,44 @@ jobs:
 
       - name: Add checkboxes to PR description
         if: github.event.action == 'opened'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
+        run: |
+          # YAML ファイルのパス
+          YAML_FILE="setting/github_action_setting.yaml"
 
-            // 環境変数から差分があるディレクトリを取得
-            const changedDirectories = process.env.changed_directories.split(',').filter(Boolean);
+          # 変更されたディレクトリ（カンマ区切り）
+          CHANGED_DIRECTORIES="${changed_directories}"
 
-            if (!changedDirectories){
-              return
-            }
-            
-            // checklists.yamlファイルを読み取る
-            const fileContents = fs.readFileSync('setting/github_action_setting.json', 'utf8');
-            const config = JSON.parse(fileContents);
+          # プルリクエストの本文を取得
+          PR_BODY=$(gh pr view "$GITHUB_REF" --json body -q .body)
 
+          # チェックリストの追加
+          add_checklists() {
+            local directory="$1"
+            local checklists
 
-            const comments = [
-              context.payload.pull_request.body,
-              '### 以下の項目を確認してください',
-            ]
+            # yq を使用して YAML ファイルからチェックリストを取得
+            checklists=$(yq e ".setting[] | select(.path == \"$directory\") | .checklists[]" "$YAML_FILE")
 
-            changedDirectories.forEach((directory) => {
-              const targetConfig = config.setting.find(item => item.path === directory)
+            if [[ -n "$checklists" ]]; then
+              printf "%s\n" "$checklists"
+            fi
+          }
 
-              if (!targetConfig) {
-                return
-              }
+          # 結果を格納する変数
+          RESULT="$PR_BODY"
+          RESULT+="\n### 以下の項目を確認してください\n"
 
-              comments.push(...(targetConfig.checklists))
-            })
-            
-            const body = comments.join('\n')
+          # 変更されたディレクトリごとにチェックリストを追加
+          for dir in $(echo "$CHANGED_DIRECTORIES" | tr ',' '\n'); do
+            add_checklists "$dir"
+          done
 
-            github.rest.pulls.update({
-              pull_number: context.payload.pull_request.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body,
-            })
-            
-            throw new Error('確認されていない項目があります。')
+          # 結果が空でない場合のみ更新
+          if [[ ! -z "$RESULT" ]]; then
+            # GitHub CLI を使用してプルリクエストの本文を更新
+            gh pr edit "$GITHUB_REF" --body "$RESULT"
+          fi
+
 
       - name: Update status check based on checkboxes
         if: github.event.action
