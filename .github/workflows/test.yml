@@ -62,7 +62,12 @@ jobs:
 
       - name: Add checkboxes to PR description
         if: github.event.action == 'opened'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REF: ${{ github.event.pull_request.html_url }}
         run: |
+          sudo apt-get update && sudo apt-get install -y yq
+          
           # YAML ファイルのパス
           YAML_FILE="setting/github_action_setting.yaml"
 
