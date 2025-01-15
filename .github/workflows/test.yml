@@ -75,7 +75,7 @@ jobs:
           CHANGED_DIRECTORIES="${changed_directories}"
 
           # プルリクエストの本文を取得
-          PR_BODY=$(gh pr view "$GITHUB_REF" --json body -q .body)
+          PR_BODY=$(gh pr view ${{ github.event.pull_request.number }} --json body -q .body)
 
           # チェックリストの追加
           add_checklists() {
@@ -102,7 +102,7 @@ jobs:
           # 結果が空でない場合のみ更新
           if [[ ! -z "$RESULT" ]]; then
             # GitHub CLI を使用してプルリクエストの本文を更新
-            gh pr edit "$GITHUB_REF" --body "$RESULT"
+            gh pr edit ${{ github.event.pull_request.number }} --body "$RESULT"
           fi
 
 
