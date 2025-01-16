@@ -48,11 +48,6 @@ jobs:
       - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v35
-      - name: Get changed directories
-        id: changed-directories
-        run: |
-          CHANGED_DIRECTORIES=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr '\n' ',' | sed 's/,$/' | xargs -d, -I {} dirname {} | sort -u | tr '\n' ',')
-          echo "::set-output name=directories::$CHANGED_DIRECTORIES"
       - name: Get PR body
         id: pr_body
         uses: actions/github-script@v6
@@ -65,20 +60,21 @@ jobs:
               pull_number: pr.number,
             });
             return body.data.body;
-      - name: Add checklists
-        id: add_checklists
+      - name: get_checklist_config
+        id: get_checklist_config
         uses: mikefarah/yq@master
         with:
           cmd: |
-            yq -j '.setting[] | select(.path | IN([${{ steps.changed-directories.outputs.directories }}])) | {path: .path, checklists: .checklists}' setting/github_action_setting.yaml
+            yq -j '.setting[]' setting/github_action_setting.yaml
       - name: Update PR body
-        if: steps.add_checklists.outputs.result != '[]'
+        if: steps.get_checklist_config.outputs.result != '[]'
         uses: actions/github-script@v6
         with:
           script: |
             const pr = context.payload.pull_request;
-            const checklists = JSON.parse('${{ steps.add_checklists.outputs.result }}');
+            const checklists = JSON.parse('${{ steps.get_checklist_config.outputs.result }}');
             let result = "";
+            let changed_files = ${{ steps.changed-files.outputs.all_changed_files }}
             checklists.forEach(item => {
               result += `\n## レビュワーは以下の項目を確認してください\n`;
               item.checklists.forEach(checklist => {
