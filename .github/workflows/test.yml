@@ -86,15 +86,15 @@ jobs:
               if(item.path.endsWith('/')){
                 isTargetIncluded = changedFiles.some((path) =>{
                   return path.includes(item.path)  // パスが含まれているか
-                }) && item.checklists.every.((checkItem) => {
-                  return originalBody.includes(checkItem)  // PR概要欄にすでに含まれているか
+                }) && item.checklists.every((checkItem) => {
+                  return !originalBody.includes(checkItem)  // PR概要欄にすでに記載がある場合はfalse
                 })
 
               } else {
                 isTargetIncluded = changedFiles.some((path) =>{
                   return path === item.path  // パスが一致しているか
-                }) && item.checklists.every.((checkItem) => {
-                  return originalBody.includes(checkItem) // PR概要欄にすでに含まれているか
+                }) && item.checklists.every((checkItem) => {
+                  return !originalBody.includes(checkItem) // PR概要欄にすでに記載がある場合はfalse
                 })
               }
               
