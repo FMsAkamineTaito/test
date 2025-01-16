@@ -112,7 +112,7 @@ jobs:
           # 結果が空でない場合のみ更新
           if [[ ${#RESULT[@]} -gt 0 ]]; then
             # GitHub CLI を使用してプルリクエストの本文を更新
-            gh pr edit ${{ github.event.pull_request.number }} --body "${PR_BODY}\n${TITLE}\n$(printf "%s\n" "${RESULT[@]}")"
+            gh pr edit ${{ github.event.pull_request.number }} --body "$(printf "%s\n%s\n%s" "${PR_BODY}" "${TITLE}" "$(printf "%s" "${RESULT[@]}")")"
             exit 1
           fi
 
