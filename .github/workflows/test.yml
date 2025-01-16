@@ -11,7 +11,7 @@ permissions:
 jobs:
   check-commiter:
     runs-on: ubuntu-latest
-    if: (github.event.action == 'open' || github.event.action == 'synchronize')
+    if: github.event.action == 'opened' || github.event.action == 'synchronize'
     outputs:
       should_continue: ${{ steps.check_is_fms.outputs.result }}
     steps:
@@ -42,7 +42,7 @@ jobs:
     
   pr-status-check:
     needs: check-commiter
-    if: ${{ fromJSON(needs.check-commiter.outputs.should_continue) }} && (github.event.action == 'open' || github.event.action == 'synchronize')
+    if: ${{ fromJSON(needs.check-commiter.outputs.should_continue) }} && (github.event.action == 'opened' || github.event.action == 'synchronize')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
