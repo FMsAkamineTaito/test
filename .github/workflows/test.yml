@@ -26,6 +26,11 @@ jobs:
           });
           
           const isAllCommitFromFms = commitLists["data"].every((commit) => {
+              // マージコミットの場合はスキップ
+              if (commit["parents"] && commit["parents"].length > 1) {
+                return true;
+              }
+              
               const commitAuthor = commit["commit"]["author"]["name"]
               const commitAuthorEmail = commit["commit"]["author"]["email"]
           
@@ -38,6 +43,8 @@ jobs:
     needs: check-commiter
     if: ${{ fromJSON(needs.check-commiter.outputs.should_continue) }}
     runs-on: ubuntu-latest
+    container:
+      image: mikefarah/yq:latest
     steps:
       - name: Check out the code
         uses: actions/checkout@v3
@@ -54,51 +61,65 @@ jobs:
           echo "Changed files: $CHANGED_FILES"
 
           # 差分があるディレクトリを抽出して環境変数に格納
-          CHANGED_DIRECTORIES=$(echo "$CHANGED_FILES" | grep -o '^[^/]*' | sort -u)
+          CHANGED_DIRECTORIES=$(echo "$CHANGED_FILES" | grep -o '^[^/]*' | sort -u | tr '\n' ',' | sed 's/,$//')
           echo "Changed directories: $CHANGED_DIRECTORIES"
           
           # 環境変数にセット
-          echo "changed_directories=$CHANGED_DIRECTORIES" >> $GITHUB_OUTPUT
+          echo "changed_directories=$CHANGED_DIRECTORIES" >> $GITHUB_ENV
 
       - name: Add checkboxes to PR description
-        if: steps.check_diff.outputs.has_specific_files == 'true' && github.event.action == 'opened'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const yaml = require('js-yaml');
+        if: github.event.action == 'opened'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REF: ${{ github.event.pull_request.html_url }}
+        run: |
+          # YAML ファイルのパス
+          YAML_FILE="setting/github_action_setting.yaml"
 
-            // 環境変数から差分があるディレクトリを取得
-            const changedDirectories = process.env.changed_directories.split('\n').filter(Boolean);
-            
-            // checklists.yamlファイルを読み取る
-            const fileContents = fs.readFileSync('setting/github_action_setting.yaml', 'utf8');
-            const data = yaml.load(fileContents);
+          # 変更されたディレクトリ（カンマ区切り）
+          CHANGED_DIRECTORIES="${changed_directories}"
 
+          # プルリクエストの本文を取得
+          PR_BODY=$(gh pr view ${{ github.event.pull_request.number }} --json body -q .body)
 
-            const comments = [
-              context.payload.pull_request.body,
-              '### 以下の項目を確認してください',
-            ]
+          TITLE="## レビュワーは以下の項目を確認してください"
 
-            changedDirectories.forEach((directory) => {
-              const checklists = data.setting.filter(item => item.path.includes(directory))
+          # チェックリストの追加
+          add_checklists() {
+            local directory="$1"
+            local checklists
+            local lenght
 
-              checklists.forEach((checklist) => {
-                comment.push(checklist)
-              })
-            })
-            
-            const body = comments.join('\n')
+            lenght=$(yq ".setting[] | select(.path == \"$directory\") | .checklists | length" "$YAML_FILE")
 
-            github.rest.pulls.update({
-              pull_number: context.payload.pull_request.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body,
-            })
-            
-            throw new Error('確認されていない項目があります。')
+            if [[ "$lenght" -gt 0 ]]; then
+              checklists=()
+              for i in $(seq 0 $((lenght - 1))); do
+                checklists+=("$(yq -r ".setting[] | select(.path == \"$directory\") | .checklists[$i]" "$YAML_FILE")")
+              done
+              printf "%s\n" " ${checklists[@]}"
+            fi
+
+            exit 0
+          }
+
+          RESULT=()
+
+          # 変更されたディレクトリごとにチェックリストを追加
+          IFS=',' read -r -a dirs <<< "$CHANGED_DIRECTORIES"
+          for dir in "${dirs[@]}"; do
+            checklist=$(add_checklists "$dir")
+            if [[ -n "$checklist" ]]; then
+              RESULT+=("$checklist")
+            fi
+          done
+
+          # 結果が空でない場合のみ更新
+          if [[ ${#RESULT[@]} -gt 0 ]]; then
+            # GitHub CLI を使用してプルリクエストの本文を更新
+            gh pr edit ${{ github.event.pull_request.number }} --body "$(printf "%s\n%s\n%s" "${PR_BODY}" "${TITLE}" "$(printf "%s" "${RESULT[@]}")")"
+            exit 1
+          fi
 
       - name: Update status check based on checkboxes
         if: github.event.action
@@ -115,4 +136,3 @@ jobs:
             } else {
               throw new Error('確認されていない項目があります。')
             }
-            
