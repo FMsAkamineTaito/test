@@ -108,7 +108,7 @@ jobs:
               return
             }
 
-            const originalBody = '${{ steps.pr_body.outputs.result }}';
+            const originalBody = '${{ steps.pr_body.outputs.result }}' ?? "";
             
             github.rest.pulls.update({
               owner: context.repo.owner,
