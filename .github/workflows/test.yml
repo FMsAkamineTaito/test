@@ -83,7 +83,7 @@ jobs:
             local checklists
 
             # yq を使用して YAML ファイルからチェックリストを取得
-            checklists=$(yq e ".setting[] | select(.path == \"$directory\") | .checklists[]" "$YAML_FILE")
+            checklists=$(yq -r ".setting[] | select(.path == \"$directory\")" "$YAML_FILE")
 
             if [[ -n "$checklists" ]]; then
               printf "%s\n" "$checklists"
