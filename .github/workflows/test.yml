@@ -108,7 +108,10 @@ jobs:
               return
             }
 
-            const originalBody = '${{ steps.pr_body.outputs.result }}' ?? "";
+            const originalBody = '${{ steps.pr_body.outputs.result }}';
+            if (originalBody === "null"){  # 概要欄がnullの場合は"null"が渡される
+              originalBody = ""
+            }
             
             github.rest.pulls.update({
               owner: context.repo.owner,
