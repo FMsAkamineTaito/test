@@ -43,11 +43,12 @@ jobs:
     needs: check-commiter
     if: ${{ fromJSON(needs.check-commiter.outputs.should_continue) }}
     runs-on: ubuntu-latest
-    container:
-      image: mikefarah/yq:latest
     steps:
       - name: Check out the code
         uses: actions/checkout@v3
+
+      - name: Install yq
+        uses: ./.github/actions/install-yq
 
       - name: Fetch all history
         run: git fetch --prune --unshallow
