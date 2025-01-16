@@ -61,12 +61,6 @@ jobs:
               repo: context.repo.repo,
               pull_number: pr.number,
             });
-
-            if(body.data.body && body.data.body.includes("## レビュワーは以下の項目を確認してください")){
-              fs.appendFileSync(process.env.GITHUB_ENV, `SHOULD_UPDATE_PR_BODY=true`);
-            }
-            fs.appendFileSync(process.env.GITHUB_ENV, `SHOULD_UPDATE_PR_BODY=true`);
-
             return body.data.body;
       - name: get_checklist_config
         id: get_checklist_config
@@ -75,24 +69,32 @@ jobs:
           cmd: |
             yq -o=json '.setting' setting/github_action_setting.yaml
       - name: Update PR body
-        if: ${{ env.SHOULD_UPDATE_PR_BODY == true}}
         uses: actions/github-script@v7
         with:
           script: |
-            const pr = context.payload.pull_request;
+            let originalBody = '${{ steps.pr_body.outputs.result }}';
+            if (originalBody === "null"){  // 概要欄がnullの場合は"null"が渡される
+              originalBody = ""
+            }
+
             const checklists = ${{ steps.get_checklist_config.outputs.result }};
             let result = "";
             let changedFiles = '${{ steps.changed-files.outputs.all_changed_files }}'.split(' ').filter(Boolean);
-            const title = "## レビュワーは以下の項目を確認してください";
+            
             checklists.forEach(item => {
               let isTargetIncluded = false
               if(item.path.endsWith('/')){
                 isTargetIncluded = changedFiles.some((path) =>{
-                  return path.includes(item.path)
+                  return path.includes(item.path)  // パスが含まれているか
+                }) && item.checklists.every.((checkItem) => {
+                  return originalBody.includes(checkItem)  // PR概要欄にすでに含まれているか
                 })
+
               } else {
                 isTargetIncluded = changedFiles.some((path) =>{
-                  return path === item.path
+                  return path === item.path  // パスが一致しているか
+                }) && item.checklists.every.((checkItem) => {
+                  return originalBody.includes(checkItem) // PR概要欄にすでに含まれているか
                 })
               }
               
@@ -107,11 +109,9 @@ jobs:
               return
             }
 
-            let originalBody = '${{ steps.pr_body.outputs.result }}';
-            if (originalBody === "null"){  // 概要欄がnullの場合は"null"が渡される
-              originalBody = ""
-            }
-            
+            const title = "## レビュワーは以下の項目を確認してください";
+
+            const pr = context.payload.pull_request;
             github.rest.pulls.update({
               owner: context.repo.owner,
               repo: context.repo.repo,
