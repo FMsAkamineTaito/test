@@ -50,7 +50,7 @@ jobs:
         uses: tj-actions/changed-files@v35
       - name: Get PR body
         id: pr_body
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const pr = context.payload.pull_request;
@@ -68,26 +68,49 @@ jobs:
             yq -j '.setting[]' setting/github_action_setting.yaml
       - name: Update PR body
         if: steps.get_checklist_config.outputs.result != '[]'
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const pr = context.payload.pull_request;
-            const checklists = JSON.parse('${{ steps.get_checklist_config.outputs.result }}');
+            const checklists = JSON.parse(${{ steps.get_checklist_config.outputs.result }});
             let result = "";
-            let changed_files = ${{ steps.changed-files.outputs.all_changed_files }}
+            let changed_files = '${{ steps.changed-files.outputs.all_changed_files }}'.split(' ').filter(Boolean);
+
+            const targetPathes = checklists.map((item) => {
+              return item.path
+            })
+            const isTargetExist = targetPathes.some((path) => {
+              chanfged
+            })
+
             checklists.forEach(item => {
-              result += `\n## レビュワーは以下の項目を確認してください\n`;
-              item.checklists.forEach(checklist => {
-                result += `${checklist}\n`;
-              });
+              const title = `## レビュワーは以下の項目を確認してください`;
+              
+              let isTargetIncluded = false
+              if(item.path.endsWith('/')){
+                isTargetIncluded = changed_files.some((path) =>{
+                  path.includes(item.path)
+                })
+              } else {
+                isTargetIncluded = changed_files.some((path) =>{
+                  path === item.path
+                })
+              }
+              
+              if(isTargetIncluded){
+                item.checklists.forEach(checklist => {
+                  result += `${checklist}\n`;
+                });
+              }
             });
             const originalBody = '${{ steps.pr_body.outputs.result }}';
             await github.rest.pulls.update({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: pr.number,
-              body: `${originalBody}\n${result}`,
+              body: `${originalBody}\n${titile}\n${result}`,
             });
+            throw new Error('確認されていない項目があります。')
 
       - name: Update status check based on checkboxes
         if: github.event.action
