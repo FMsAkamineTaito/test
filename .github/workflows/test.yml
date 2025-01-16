@@ -26,6 +26,11 @@ jobs:
           });
           
           const isAllCommitFromFms = commitLists["data"].every((commit) => {
+              // マージコミットの場合はスキップ
+              if (commit["parents"] && commit["parents"].length > 1) {
+                return true;
+              }
+              
               const commitAuthor = commit["commit"]["author"]["name"]
               const commitAuthorEmail = commit["commit"]["author"]["email"]
           
@@ -39,71 +44,79 @@ jobs:
     if: ${{ fromJSON(needs.check-commiter.outputs.should_continue) }}
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the code
-        uses: actions/checkout@v3
-
-      - name: Fetch all history
-        run: git fetch --prune --unshallow
-
-      - name: Check diff for specific files
-        id: check_diff
-        run: |
-          BASE_SHA=${{ github.event.pull_request.base.sha }}
-          HEAD_SHA=${{ github.event.pull_request.head.sha }}
-          CHANGED_FILES=$(git diff --name-only $BASE_SHA $HEAD_SHA)
-          echo "Changed files: $CHANGED_FILES"
-
-          # 差分があるディレクトリを抽出して環境変数に格納
-          CHANGED_DIRECTORIES=$(echo "$CHANGED_FILES" | grep -o '^[^/]*' | sort -u | tr '\n' ',' | sed 's/,$//')
-          echo "Changed directories: $CHANGED_DIRECTORIES"
-          
-          # 環境変数にセット
-          echo "changed_directories=$CHANGED_DIRECTORIES" >> $GITHUB_ENV
-
-      - name: Add checkboxes to PR description
-        if: github.event.action == 'opened'
+      - uses: actions/checkout@v3
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v35
+      - name: Get PR body
+        id: pr_body
         uses: actions/github-script@v7
         with:
           script: |
-            const fs = require('fs');
-
-            // 環境変数から差分があるディレクトリを取得
-            const changedDirectories = process.env.changed_directories.split(',').filter(Boolean);
-
-            if (!changedDirectories){
-              return
-            }
-            
-            // checklists.yamlファイルを読み取る
-            const fileContents = fs.readFileSync('setting/github_action_setting.json', 'utf8');
-            const config = JSON.parse(fileContents);
-
-
-            const comments = [
-              context.payload.pull_request.body,
-              '### 以下の項目を確認してください',
-            ]
-
-            changedDirectories.forEach((directory) => {
-              const targetConfig = config.setting.find(item => item.path === directory)
-
-              if (!targetConfig) {
-                return
-              }
-
-              comments.push(...(targetConfig.checklists))
-            })
-            
-            const body = comments.join('\n')
-
-            github.rest.pulls.update({
-              pull_number: context.payload.pull_request.number,
+            const pr = context.payload.pull_request;
+            const body = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: body,
-            })
+              pull_number: pr.number,
+            });
+            return body.data.body;
+      - name: get_checklist_config
+        id: get_checklist_config
+        uses: mikefarah/yq@master
+        with:
+          cmd: |
+            yq -o=json '.setting' setting/github_action_setting.yaml
+      - name: Update PR body
+        if: steps.get_checklist_config.outputs.result != '[]'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const checklists = ${{ steps.get_checklist_config.outputs.result }};
+            let result = "";
+            let changedFiles = '${{ steps.changed-files.outputs.all_changed_files }}'.split(' ').filter(Boolean);
+            const title = "## レビュワーは以下の項目を確認してください";
+
+            console.log("changed files :", changedFiles)
+            checklists.forEach(item => {
+              
+              
+              console.log("item :", item)
+
+              let isTargetIncluded = false
+              if(item.path.endsWith('/')){
+                isTargetIncluded = changedFiles.some((path) =>{
+                  return path.includes(item.path)
+                })
+              } else {
+                isTargetIncluded = changedFiles.some((path) =>{
+                  return path === item.path
+                })
+              }
+              
+              console.log("isTargetIncluded :", isTargetIncluded)
+              if(isTargetIncluded){
+                item.checklists.forEach(checklist => {
+                  result += `${checklist}\n`;
+                });
+              }
+            });
+
+            if(!result){
+              console.log("####")
+              console.log("result is nothing")
+              return
+            }
+
+            const originalBody = '${{ steps.pr_body.outputs.result }}' ?? "";
             
-            throw new Error('確認されていない項目があります。')
+            github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              body: `${originalBody}\n${title}\n${result}`,
+            });
+            throw new Error('確認されていない項目があります。');
 
       - name: Update status check based on checkboxes
         if: github.event.action
