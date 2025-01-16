@@ -26,6 +26,11 @@ jobs:
           });
           
           const isAllCommitFromFms = commitLists["data"].every((commit) => {
+              // マージコミットの場合はスキップ
+              if (commit["parents"] && commit["parents"].length > 1) {
+                return true;
+              }
+              
               const commitAuthor = commit["commit"]["author"]["name"]
               const commitAuthorEmail = commit["commit"]["author"]["email"]
           
@@ -38,6 +43,8 @@ jobs:
     needs: check-commiter
     if: ${{ fromJSON(needs.check-commiter.outputs.should_continue) }}
     runs-on: ubuntu-latest
+    container:
+      image: mikefarah/yq:latest
     steps:
       - name: Check out the code
         uses: actions/checkout@v3
@@ -66,8 +73,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REF: ${{ github.event.pull_request.html_url }}
         run: |
-          sudo apt-get update && sudo apt-get install -y yq
-          
           # YAML ファイルのパス
           YAML_FILE="setting/github_action_setting.yaml"
 
