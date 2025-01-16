@@ -77,32 +77,40 @@ jobs:
           # プルリクエストの本文を取得
           PR_BODY=$(gh pr view ${{ github.event.pull_request.number }} --json body -q .body)
 
+          TITLE="\n### 以下の項目を確認してください\n"
+
           # チェックリストの追加
           add_checklists() {
             local directory="$1"
             local checklists
+            local lenght
 
-            # yq を使用して YAML ファイルからチェックリストを取得
-            checklists=$(yq -r ".setting[] | select(.path == \"$directory\")" "$YAML_FILE")
+            lenght=$(yq ".setting[] | select(.path == \"$directory\") | .checklists | length" "$YAML_FILE")
 
-            if [[ -n "$checklists" ]]; then
-              printf "%s\n" "$checklists"
+            if [[ "$lenght" -gt 0 ]]; then
+              checklists=()
+              for i in $(seq 0 $((lenght - 1))); do
+                checklists+=("$(yq -r ".setting[] | select(.path == \"$directory\") | .checklists[$i]" "$YAML_FILE")")
+              done
+              printf "%s\n" "${checklists[@]}"
             fi
           }
 
-          # 結果を格納する変数
-          RESULT="$PR_BODY"
-          RESULT+="\n### 以下の項目を確認してください\n"
+          RESULT=()
 
           # 変更されたディレクトリごとにチェックリストを追加
-          for dir in $(echo "$CHANGED_DIRECTORIES" | tr ',' '\n'); do
-            add_checklists "$dir"
+          IFS=',' read -r -a dirs <<< "$CHANGED_DIRECTORIES"
+          for dir in "${dirs[@]}"; do
+            local checklist=$(add_checklists "$dir")
+            if [[ -n "$checklist" ]]; then
+              RESULT+=("$checklist")
+            fi
           done
 
           # 結果が空でない場合のみ更新
-          if [[ ! -z "$RESULT" ]]; then
+          if [[ ${#RESULT[@]} -gt 0 ]]; then
             # GitHub CLI を使用してプルリクエストの本文を更新
-            gh pr edit ${{ github.event.pull_request.number }} --body "$RESULT"
+            gh pr edit ${{ github.event.pull_request.number }} --body "${PR_BODY}${TITLE}$(printf "%s\n" "${RESULT[@]}")"
           fi
 
 
