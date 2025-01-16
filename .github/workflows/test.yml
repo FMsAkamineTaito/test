@@ -76,12 +76,9 @@ jobs:
             let result = "";
             let changedFiles = '${{ steps.changed-files.outputs.all_changed_files }}'.split(' ').filter(Boolean);
             const title = "## レビュワーは以下の項目を確認してください";
-
-            console.log("changed files :", changedFiles)
             checklists.forEach(item => {
               
               
-              console.log("item :", item)
 
               let isTargetIncluded = false
               if(item.path.endsWith('/')){
@@ -94,7 +91,6 @@ jobs:
                 })
               }
               
-              console.log("isTargetIncluded :", isTargetIncluded)
               if(isTargetIncluded){
                 item.checklists.forEach(checklist => {
                   result += `${checklist}\n`;
@@ -103,8 +99,6 @@ jobs:
             });
 
             if(!result){
-              console.log("####")
-              console.log("result is nothing")
               return
             }
 
