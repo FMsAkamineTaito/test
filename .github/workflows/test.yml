@@ -74,13 +74,15 @@ jobs:
             const pr = context.payload.pull_request;
             const checklists = ${{ steps.get_checklist_config.outputs.result }};
             let result = "";
-            let changedFiles = '${{ steps.changed-files.outputs.all_changed_files }}'.split(' ').filter(Boolean);
-
+            let changedFiles = '${{ steps.changed-files.outputs.all_changed_files }}'.split(' ').filter(Boolean).map();
+            const title = `## レビュワーは以下の項目を確認してください`;
+            
             console.log("changed files :", changedFiles)
             checklists.forEach(item => {
-              const title = `## レビュワーは以下の項目を確認してください`;
+              
               
               console.log("item :", item)
+
               let isTargetIncluded = false
               if(item.path.endsWith('/')){
                 isTargetIncluded = changedFiles.some((path) =>{
