@@ -76,24 +76,17 @@ jobs:
             let result = "";
             let changed_files = '${{ steps.changed-files.outputs.all_changed_files }}'.split(' ').filter(Boolean);
 
-            const targetPathes = checklists.map((item) => {
-              return item.path
-            })
-            const isTargetExist = targetPathes.some((path) => {
-              chanfged
-            })
-
             checklists.forEach(item => {
               const title = `## レビュワーは以下の項目を確認してください`;
               
               let isTargetIncluded = false
               if(item.path.endsWith('/')){
                 isTargetIncluded = changed_files.some((path) =>{
-                  path.includes(item.path)
+                  return path.includes(item.path)
                 })
               } else {
                 isTargetIncluded = changed_files.some((path) =>{
-                  path === item.path
+                  return path === item.path
                 })
               }
               
@@ -103,14 +96,19 @@ jobs:
                 });
               }
             });
+
+            if(!result){
+              return
+            }
+
             const originalBody = '${{ steps.pr_body.outputs.result }}';
             await github.rest.pulls.update({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: pr.number,
-              body: `${originalBody}\n${titile}\n${result}`,
+              body: `${originalBody}\n${title}\n${result}`,
             });
-            throw new Error('確認されていない項目があります。')
+            throw new Error('確認されていない項目があります。');
 
       - name: Update status check based on checkboxes
         if: github.event.action
