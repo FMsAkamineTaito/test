@@ -92,7 +92,7 @@ jobs:
                 })
               }
               
-              conosle.log("isTargetIncluded :", isTargetIncluded)
+              console.log("isTargetIncluded :", isTargetIncluded)
               if(isTargetIncluded){
                 item.checklists.forEach(checklist => {
                   result += `${checklist}\n`;
@@ -101,7 +101,7 @@ jobs:
             });
 
             if(!result){
-              conosle.log("####")
+              console.log("####")
               console.log("result is nothing")
               return
             }
