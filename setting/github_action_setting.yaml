@@ -1,7 +1,7 @@
 setting:
   - path: "target_directory"
     checklists: 
-      - "## target_directory用チェックリスト"
+      - "#### target_directory用チェックリスト"
       - "- [ ] Task1"
       - "- [ ] Tasl2"
       - "- [ ] Tasl3"
