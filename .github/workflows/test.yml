@@ -62,7 +62,7 @@ jobs:
               pull_number: pr.number,
             });
 
-            if(body.data.body.includes("## レビュワーは以下の項目を確認してください")){
+            if(body.data.body && body.data.body.includes("## レビュワーは以下の項目を確認してください")){
               fs.appendFileSync(process.env.GITHUB_ENV, `SHOULD_UPDATE_PR_BODY=true`);
             }
             fs.appendFileSync(process.env.GITHUB_ENV, `SHOULD_UPDATE_PR_BODY=true`);
