@@ -72,7 +72,7 @@ jobs:
         with:
           script: |
             const pr = context.payload.pull_request;
-            const checklists = JSON.parse(${{ steps.get_checklist_config.outputs.result }});
+            const checklists = JSON.parse('${{ steps.get_checklist_config.outputs.result }}');
             let result = "";
             let changed_files = '${{ steps.changed-files.outputs.all_changed_files }}'.split(' ').filter(Boolean);
 
