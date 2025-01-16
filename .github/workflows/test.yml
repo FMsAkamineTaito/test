@@ -101,7 +101,7 @@ jobs:
           # 変更されたディレクトリごとにチェックリストを追加
           IFS=',' read -r -a dirs <<< "$CHANGED_DIRECTORIES"
           for dir in "${dirs[@]}"; do
-            local checklist=$(add_checklists "$dir")
+            checklist=$(add_checklists "$dir")
             if [[ -n "$checklist" ]]; then
               RESULT+=("$checklist")
             fi
