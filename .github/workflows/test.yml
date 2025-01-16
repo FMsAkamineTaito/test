@@ -75,7 +75,7 @@ jobs:
           cmd: |
             yq -o=json '.setting' setting/github_action_setting.yaml
       - name: Update PR body
-        if: ${{ SHOULD_UPDATE_PR_BODY == true}}
+        if: ${{ env.SHOULD_UPDATE_PR_BODY == true}}
         uses: actions/github-script@v7
         with:
           script: |
