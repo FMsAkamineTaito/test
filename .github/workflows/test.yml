@@ -120,6 +120,7 @@ jobs:
               body: `${originalBody}\n${title}\n${result}`,
             });
             throw new Error('確認されていない項目があります。');
+
   update-pr-status:
     runs-on: ubuntu-latest
     if: github.event.action == 'edited'
