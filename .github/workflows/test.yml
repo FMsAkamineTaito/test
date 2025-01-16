@@ -53,12 +53,20 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const fs = require('fs');
+
             const pr = context.payload.pull_request;
             const body = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: pr.number,
             });
+
+            if(body.data.body.includes("## レビュワーは以下の項目を確認してください")){
+              fs.appendFileSync(process.env.GITHUB_ENV, `SHOULD_UPDATE_PR_BODY=true`);
+            }
+            fs.appendFileSync(process.env.GITHUB_ENV, `SHOULD_UPDATE_PR_BODY=true`);
+
             return body.data.body;
       - name: get_checklist_config
         id: get_checklist_config
@@ -67,7 +75,7 @@ jobs:
           cmd: |
             yq -o=json '.setting' setting/github_action_setting.yaml
       - name: Update PR body
-        if: steps.get_checklist_config.outputs.result != '[]'
+        if: ${{ SHOULD_UPDATE_PR_BODY == true}}
         uses: actions/github-script@v7
         with:
           script: |
