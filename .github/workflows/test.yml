@@ -77,9 +77,6 @@ jobs:
             let changedFiles = '${{ steps.changed-files.outputs.all_changed_files }}'.split(' ').filter(Boolean);
             const title = "## レビュワーは以下の項目を確認してください";
             checklists.forEach(item => {
-              
-              
-
               let isTargetIncluded = false
               if(item.path.endsWith('/')){
                 isTargetIncluded = changedFiles.some((path) =>{
@@ -102,7 +99,7 @@ jobs:
               return
             }
 
-            const originalBody = '${{ steps.pr_body.outputs.result }}';
+            let originalBody = '${{ steps.pr_body.outputs.result }}';
             if (originalBody === "null"){  // 概要欄がnullの場合は"null"が渡される
               originalBody = ""
             }
