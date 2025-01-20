@@ -1,10 +1,10 @@
 repos:
   - repo: https://github.com/FMsAkamineTaito/pre-commit-test
-    rev: d1df69e7d09a156d3c60a48f9b680e21a4e96eae
+    rev: 6fb21a04028170270d6604eec8b68c60539180f1
     hooks:
       - id: pr-status-check
         name: pre-commit-test
-        stages: [pre-commit, prepare-commit-msg]
+        stages: [pre-merge-commit]
         always_run: true
         verbose: true
         log_file: /Users/akaminetaito/Desktop/log.txt
