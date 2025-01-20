@@ -11,6 +11,7 @@ permissions:
 jobs:
   check-commiter:
     runs-on: ubuntu-latest
+    if: github.event.action == 'opened' || github.event.action == 'synchronize'
     outputs:
       should_continue: ${{ steps.check_is_fms.outputs.result }}
     steps:
@@ -39,100 +40,102 @@ jobs:
           
           return isAllCommitFromFms
     
-  pr_status_check:
+  pr-status-check:
     needs: check-commiter
-    if: ${{ fromJSON(needs.check-commiter.outputs.should_continue) }}
+    if: ${{ fromJSON(needs.check-commiter.outputs.should_continue) }} && (github.event.action == 'opened' || github.event.action == 'synchronize')
     runs-on: ubuntu-latest
-    container:
-      image: mikefarah/yq:latest
     steps:
-      - name: Check out the code
-        uses: actions/checkout@v3
-
-      - name: Fetch all history
-        run: git fetch --prune --unshallow
-
-      - name: Check diff for specific files
-        id: check_diff
-        run: |
-          BASE_SHA=${{ github.event.pull_request.base.sha }}
-          HEAD_SHA=${{ github.event.pull_request.head.sha }}
-          CHANGED_FILES=$(git diff --name-only $BASE_SHA $HEAD_SHA)
-          echo "Changed files: $CHANGED_FILES"
-
-          # 差分があるディレクトリを抽出して環境変数に格納
-          CHANGED_DIRECTORIES=$(echo "$CHANGED_FILES" | grep -o '^[^/]*' | sort -u | tr '\n' ',' | sed 's/,$//')
-          echo "Changed directories: $CHANGED_DIRECTORIES"
-          
-          # 環境変数にセット
-          echo "changed_directories=$CHANGED_DIRECTORIES" >> $GITHUB_ENV
-
-      - name: Add checkboxes to PR description
-        if: github.event.action == 'opened'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REF: ${{ github.event.pull_request.html_url }}
-        run: |
-          # YAML ファイルのパス
-          YAML_FILE="setting/github_action_setting.yaml"
-
-          # 変更されたディレクトリ（カンマ区切り）
-          CHANGED_DIRECTORIES="${changed_directories}"
-
-          # プルリクエストの本文を取得
-          PR_BODY=$(gh pr view ${{ github.event.pull_request.number }} --json body -q .body)
-
-          TITLE="## レビュワーは以下の項目を確認してください"
-
-          # チェックリストの追加
-          add_checklists() {
-            local directory="$1"
-            local checklists
-            local lenght
-
-            lenght=$(yq ".setting[] | select(.path == \"$directory\") | .checklists | length" "$YAML_FILE")
-
-            if [[ "$lenght" -gt 0 ]]; then
-              checklists=()
-              for i in $(seq 0 $((lenght - 1))); do
-                checklists+=("$(yq -r ".setting[] | select(.path == \"$directory\") | .checklists[$i]" "$YAML_FILE")")
-              done
-              printf "%s\n" " ${checklists[@]}"
-            fi
-
-            exit 0
-          }
-
-          RESULT=()
-
-          # 変更されたディレクトリごとにチェックリストを追加
-          IFS=',' read -r -a dirs <<< "$CHANGED_DIRECTORIES"
-          for dir in "${dirs[@]}"; do
-            checklist=$(add_checklists "$dir")
-            if [[ -n "$checklist" ]]; then
-              RESULT+=("$checklist")
-            fi
-          done
-
-          # 結果が空でない場合のみ更新
-          if [[ ${#RESULT[@]} -gt 0 ]]; then
-            # GitHub CLI を使用してプルリクエストの本文を更新
-            gh pr edit ${{ github.event.pull_request.number }} --body "$(printf "%s\n%s\n%s" "${PR_BODY}" "${TITLE}" "$(printf "%s" "${RESULT[@]}")")"
-            exit 1
-          fi
-
-      - name: Update status check based on checkboxes
-        if: github.event.action
-        id: update_check
+      - uses: actions/checkout@v3
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v35
+      - name: Get PR body
+        id: pr_body
         uses: actions/github-script@v7
         with:
           script: |
-            const prBody = context.payload.pull_request.body || ''
-            
-            const allCheckboxesChecked = !prBody.includes('- [ ]')
-  
-            if (allCheckboxesChecked) {
-              return
-            } else {
-              throw new Error('確認されていない項目があります。')
+            const fs = require('fs');
+
+            const pr = context.payload.pull_request;
+            const body = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+            });
+            return body.data.body;
+      - name: get_checklist_config
+        id: get_checklist_config
+        uses: mikefarah/yq@master
+        with:
+          cmd: |
+            yq -o=json '.setting' setting/github_action_setting.yaml
+      - name: Update PR body
+        uses: actions/github-script@v7
+        with:
+          script: |
+            let originalBody = '${{ steps.pr_body.outputs.result }}';
+            if (originalBody === "null"){  // 概要欄がnullの場合は"null"が渡される
+              originalBody = ""
             }
+
+            const checklists = ${{ steps.get_checklist_config.outputs.result }};
+            let result = "";
+            let changedFiles = '${{ steps.changed-files.outputs.all_changed_files }}'.split(' ').filter(Boolean);
+            
+            checklists.forEach(item => {
+              let isTargetIncluded = false
+              if(item.path.endsWith('/')){
+                isTargetIncluded = changedFiles.some((path) =>{
+                  return path.includes(item.path)  // パスが含まれているか
+                }) && item.checklists.every((checkItem) => {
+                  return !originalBody.includes(checkItem)  // PR概要欄にすでに記載がある場合はfalse
+                })
+
+              } else {
+                isTargetIncluded = changedFiles.some((path) =>{
+                  return path === item.path  // パスが一致しているか
+                }) && item.checklists.every((checkItem) => {
+                  return !originalBody.includes(checkItem) // PR概要欄にすでに記載がある場合はfalse
+                })
+              }
+              
+              if(isTargetIncluded){
+                item.checklists.forEach(checklist => {
+                  result += `${checklist}\n`;
+                });
+              }
+            });
+
+            if(!result){
+              return
+            }
+
+            const title = "## レビュワーは以下の項目を確認してください";
+
+            const pr = context.payload.pull_request;
+            github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              body: `${originalBody}\n${title}\n${result}`,
+            });
+            throw new Error('確認されていない項目があります。');
+
+  update-pr-status:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'edited'
+    steps:
+    - name: Update status check based on checkboxes
+      id: update_check
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const prBody = context.payload.pull_request.body || ''
+          
+          const allCheckboxesChecked = !prBody.includes('- [ ]')
+
+          if (allCheckboxesChecked) {
+            return
+          } else {
+            throw new Error('確認されていない項目があります。')
+          }
