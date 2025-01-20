@@ -4,7 +4,7 @@ repos:
     hooks:
       - id: pr-status-check
         name: pre-commit-test
-        stages: [pre-push, prepare-commit-msg]
+        stages: [pre-commit, prepare-commit-msg]
         always_run: true
         verbose: true
         log_file: /Users/akaminetaito/Desktop/log.txt
