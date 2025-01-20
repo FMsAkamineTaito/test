@@ -5,6 +5,5 @@ repos:
       - id: pr-status-check
         name: pre-commit-test
         stages: [pre-merge-commit]
-        always_run: true
         verbose: true
         log_file: /Users/akaminetaito/Desktop/log.txt
