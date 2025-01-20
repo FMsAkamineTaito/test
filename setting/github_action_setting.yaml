@@ -7,5 +7,5 @@ setting:
       - "- [ ] Tasl3"
   - path: "target_directory2"
     checklists:
-      - "### target_directory用チェックリスト"
+      - "### target_directory2用チェックリスト"
       - "- [ ] Task 1"
