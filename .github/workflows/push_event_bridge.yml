@@ -1,0 +1,65 @@
+name: Push Event Bridge
+
+on:
+  push:
+    branches:
+      - "develop/*"
+      - "sweets/*"
+      - "stage"
+      - "production"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: set env
+        run: |
+          export BRANCH_NAME=`echo $GITHUB_REF | sed -e 's/refs\/heads\///g'`
+          export ENVIRONMENT=`echo $BRANCH_NAME | sed -r 's/(.*)\/.*/\1/g'`
+          export BRANCH=`echo $BRANCH_NAME | sed -r 's/.*\/(.*)/\1/g'`
+          export EVENT_SOURCE=codepipeline.github.$GITHUB_REPOSITORY
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_ENV
+          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+          echo "EVENT_SOURCE=$EVENT_SOURCE" >> $GITHUB_ENV
+          echo "REGION_NAME=ap-northeast-1" >> $GITHUB_ENV
+      - name: set env for develop
+        if: env.ENVIRONMENT == 'develop'
+        run: |
+          echo "ACCOUNT_ID=503202947078" >> $GITHUB_ENV
+      - name: set env for sweets
+        if: env.ENVIRONMENT == 'sweets'
+        run: |
+          echo "ACCOUNT_ID=066429557238" >> $GITHUB_ENV
+      - name: set env for stage or production
+        if: env.ENVIRONMENT == 'stage' || env.ENVIRONMENT == 'production'
+        run: |
+          echo "ACCOUNT_ID=274646566107" >> $GITHUB_ENV
+      - name: check env
+        run: |
+          env
+      - name: Configure AWS credentials from IAM Role
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/clubjt-cicd-github-oidc-role-${{ env.ENVIRONMENT }}-${{ env.REGION_NAME }}
+          aws-region: ap-northeast-1
+      - name: Copy CodePipeline
+        if: env.ENVIRONMENT == 'develop' || env.ENVIRONMENT == 'sweets'
+        run: |
+          echo [{\"Source\": \"$EVENT_SOURCE\", \"DetailType\": \"GitHubPush\", \"Detail\": \"{ \\\"repositoryName\\\": \\\"$GITHUB_REPOSITORY\\\", \\\"referenceName\\\": \\\"$GITHUB_REF\\\", \\\"commitId\\\": \\\"$GITHUB_WORKFLOW_SHA\\\" }\"}] > pushevents.json
+          cat pushevents.json
+          aws events put-events --region ap-northeast-1 --entries file://pushevents.json
+      - name: Create source.zip
+        run: |
+          zip -r source.zip ./
+          ls source.zip
+      - name: Push Artifact
+        run: |
+          aws s3 cp source.zip s3://clubjt-server-pipeline-${{ env.ENVIRONMENT }}-${{ env.ACCOUNT_ID }}-${{ env.REGION_NAME }}/server/$BRANCH_NAME/source.zip
