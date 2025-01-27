@@ -1,0 +1,156 @@
+name: Pull request checklist checker
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  check-commiter:
+    runs-on: ubuntu-latest
+    outputs:
+      should_continue: ${{ steps.check_is_fms.outputs.result }}
+    steps:
+    - name: Check commiter is FMs member
+      id: check_is_fms
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const commitLists = await github.rest.pulls.listCommits({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number
+          });
+
+          let isCheckTarget = false
+        
+          for (const commit of commitLists["data"]){
+              // マージコミットの場合はスキップ
+              if (commit["parents"] && commit["parents"].length > 1) {
+                continue
+              }
+
+              const commitAuthorEmail = commit["commit"]["author"]["email"]
+              
+              isCheckTarget = commitAuthorEmail.includes("@fullmarks.co.jp") 
+              break
+          }
+          return isCheckTarget
+    
+  pr-status-check:
+    needs: check-commiter
+    if: fromJSON(needs.check-commiter.outputs.should_continue) && (github.event.action == 'opened' || github.event.action == 'synchronize')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Debug output
+        run: echo "Should Continue.. ${{ needs.check-commiter.outputs.should_continue }}"
+      - name: Debug evaluation
+        run: echo "Condition.. ${{ needs.check-commiter.outputs.should_continue == 'true' }}"
+      - name: Get checklist config
+        id: get_checklist_config
+        uses: mikefarah/yq@master
+        with:
+          cmd: |
+            yq -o=json '.setting' .github/pull_request_check_config.yaml
+      - name: Get PR information
+        id: pr_information
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            const pullRequest = context.payload.pull_request;
+
+            const response = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pullRequest.number,
+            })
+            const files = response.data.map((item) => item.filename).join(",")
+
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `CHANGED_FILES=${files}\n`);
+            
+            const body = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pullRequest.number,
+            });
+
+            return body.data.body
+      - name: Update PR body
+        uses: actions/github-script@v7
+        with:
+          script: |
+            let originalBody = ${{ steps.pr_information.outputs.result }};
+            if (originalBody === "null"){  // 概要欄がnullの場合は"null"が渡される
+              originalBody = ""
+            }
+
+            const configs = ${{ steps.get_checklist_config.outputs.result }};
+            
+            let changedFiles = '${{ steps.pr_information.outputs.CHANGED_FILES }}'.split(',')
+            
+            let result = "";
+
+            for (const config of configs){
+              let isTargetIncluded = false
+
+              if(config.path.endsWith('/')){
+                isTargetIncluded = changedFiles.some((path) =>{
+                  return path.includes(config.path)  // パスが含まれているか
+                }) 
+              } else {
+                isTargetIncluded = changedFiles.some((path) =>{
+                  return path === config.path  // パスが一致しているか
+                })
+              }
+
+              isTargetIncluded = isTargetIncluded && config.checklists.every((checkItem) => {
+                  return !originalBody.includes(checkItem) // PR概要欄にすでに記載がある場合はfalse
+                })
+              
+              if(isTargetIncluded){
+                config.checklists.forEach(checklist => {
+                  result += `${checklist}\n`;
+                });
+              }
+            }
+
+            if(!result){
+              return
+            }
+
+            const title = "## レビュワーは以下の項目を確認してください";
+
+            const pullRequest = context.payload.pull_request;
+            github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pullRequest.number,
+              body: `${originalBody}\n${title}\n${result}`,
+            });
+            throw new Error('確認されていない項目があります。');
+
+  update-pr-status:
+    runs-on: ubuntu-latest
+    needs: check-commiter
+    if: fromJSON(needs.check-commiter.outputs.should_continue) && (github.event.action == 'edited' || github.event.action == 'synchronize')
+    steps:
+    - name: Update pull request status based on checkboxes
+      id: update_check
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const prBody = context.payload.pull_request.body || ''
+          
+          const allCheckboxesChecked = !prBody.includes('- [ ]')
+
+          if (allCheckboxesChecked) {
+            return
+          } else {
+            throw new Error('確認されていない項目があります。')
+          }

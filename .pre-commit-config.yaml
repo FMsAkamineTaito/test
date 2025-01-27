@@ -1,10 +1,8 @@
 repos:
-  - repo: https://github.com/FMsAkamineTaito/pre-commit-test
-    rev: edb175fb8bba31801283f49cdc55c903b79c513a
+  - repo: https://github.com/FULL-MARKS-INC/code-checker
+    rev: df94ce9483c05b056a67bfcd98642d131b26774b
     hooks:
-      - id: pr-status-check
-        name: pre-commit-test
-        stages: [pre-commit, prepare-commit-msg]
-        always_run: true
+      - id: pr-status-checker
+        pass_filenames: false
         verbose: true
-        log_file: /Users/akaminetaito/Desktop/log.txt
+        stages: [prepare-commit-msg]
