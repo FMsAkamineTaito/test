@@ -94,7 +94,13 @@ jobs:
             
             let result = "";
 
+            console.log("###")
+            console.log("original body:", originalBody)
+
             configs.forEach((config) => {
+              console.log("##")
+              console.log("config: ", config)
+
               let hasTargetFileDiffs = false
 
               if(config.path.endsWith('/')){
