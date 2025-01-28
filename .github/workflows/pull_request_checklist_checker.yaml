@@ -129,7 +129,7 @@ jobs:
 
   update-pr-status:
     runs-on: ubuntu-latest
-    if: fromJSON(needs.check-commiter.outputs.should_continue) && github.event.action == 'edited' || github.event.action == 'synchronize'
+    if: fromJSON(needs.check-commiter.outputs.should_continue) && (github.event.action == 'edited' || github.event.action == 'synchronize')
     steps:
     - name: Update pull request status based on checkboxes
       id: update_check
