@@ -4,11 +4,11 @@
 # 末尾が/以外のものはpath指定と認識し完全一致で差分が発生した場合にchecklistsの内容を追記します。
 # checklistsはそれぞれ改行され、マークダウン記法が使用できます。
 setting: 
-  - path: 'rds_entity.py'
+  - path: 'test.py'
     checklists: 
       - '- [ ] RDS桁制限と管理画面との入力制限との整合性が取れているか'
-      - "    - [ ] CLUBJT_OPS-46204 銘柄管理の一部項目でRDSのカラム桁数超過をした入力が可能になっている"
-  - path: 'clubjt-impl/clubjt_impl/batch/batch_handler.py'
+      - "    - [ ] "
+  - path: 'test'
     checklists:
       - "- [ ] Lambda→AWS Batchへの切替の場合、アーキテクチャ変更による影響確認（タイムアウト時間など）"
-      - "    - [ ] CLUBJT_OPS-45777 楽天/Yahoo出荷実績取込バッチが処理時間15分を超え処理中断"
+      - "    - [ ] "
