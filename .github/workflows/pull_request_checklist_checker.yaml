@@ -11,7 +11,6 @@ permissions:
 jobs:
   check-commiter:
     runs-on: ubuntu-latest
-    if: github.event.action == 'opened' || github.event.action == 'synchronize'
     outputs:
       should_continue: ${{ steps.check_is_fms.outputs.result }}
     steps:
@@ -26,19 +25,21 @@ jobs:
                 repo: context.repo.repo,
                 pull_number: context.payload.pull_request.number
           });
-          
-          const isAllCommitFromFms = commitLists["data"].every((commit) => {
+
+          let isCheckTarget = false
+        
+          commitLists["data"].forEach((commit) => {
               // マージコミットの場合はスキップ
               if (commit["parents"] && commit["parents"].length > 1) {
-                return true;
+                continue
               }
 
               const commitAuthorEmail = commit["commit"]["author"]["email"]
-          
-              return commitAuthorEmail.includes("@fullmarks.co.jp") 
+              
+              isCheckTarget = commitAuthorEmail.includes("@fullmarks.co.jp") 
+              break
           })
-          
-          return isAllCommitFromFms
+          return isCheckTarget
     
   pr-status-check:
     needs: check-commiter
@@ -83,7 +84,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            let originalBody = ${{ steps.pr_information.outputs.result }} ?? "";
+            let originalBody = ${{ steps.pr_information.outputs.result }} ?? ""
 
             const configs = ${{ steps.get_checklist_config.outputs.result }};
             
@@ -91,13 +92,7 @@ jobs:
             
             let result = "";
 
-            console.log("###")
-            console.log("original body:", originalBody)
-
             configs.forEach((config) => {
-              console.log("##")
-              console.log("config: ", config)
-
               let hasTargetFileDiffs = false
 
               if(config.path.endsWith('/')){
@@ -137,7 +132,7 @@ jobs:
 
   update-pr-status:
     runs-on: ubuntu-latest
-    if: github.event.action == 'edited' || github.event.action == 'synchronize'
+    if: fromJSON(needs.check-commiter.outputs.should_continue) && github.event.action == 'edited' || github.event.action == 'synchronize'
     steps:
     - name: Update pull request status based on checkboxes
       id: update_check
