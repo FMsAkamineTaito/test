@@ -26,18 +26,15 @@ jobs:
                 pull_number: context.payload.pull_request.number
           });
 
-          let isCheckTarget = false
-        
-          commitLists["data"].forEach((commit) => {
+          let isCheckTarget = commitLists["data"].some((commit) => {
               // マージコミットの場合はスキップ
               if (commit["parents"] && commit["parents"].length > 1) {
-                continue
+                return false
               }
 
               const commitAuthorEmail = commit["commit"]["author"]["email"]
               
-              isCheckTarget = commitAuthorEmail.includes("@fullmarks.co.jp") 
-              break
+              return commitAuthorEmail.includes("@fullmarks.co.jp") 
           })
           return isCheckTarget
     
