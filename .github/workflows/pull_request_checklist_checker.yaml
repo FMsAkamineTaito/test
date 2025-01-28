@@ -83,10 +83,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            let originalBody = ${{ steps.pr_information.outputs.result }};
-            if (originalBody === "null"){  // 概要欄がnullの場合は"null"が渡される
-              originalBody = ""
-            }
+            let originalBody = ${{ steps.pr_information.outputs.result }} ?? "";
 
             const configs = ${{ steps.get_checklist_config.outputs.result }};
             
