@@ -8,7 +8,7 @@ repos:
         verbose: true
         stages: [prepare-commit-msg]
   - repo: https://github.com/FMsAkamineTaito/pre-commit-test
-    rev: 31a90a701d45eb8537568ab32eb4a4cdfe704d9a
+    rev: 320ff0a3d9dd5e508a150b9372f91f91b4a82bd0
     hooks:
       - id: pr-status-check
         pass_filenames: false
