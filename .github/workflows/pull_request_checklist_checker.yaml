@@ -26,7 +26,7 @@ jobs:
                 pull_number: context.payload.pull_request.number
           });
 
-          let isCheckTarget = commitLists["data"].some((commit) => {
+          let isFMsPullRequest = commitLists["data"].some((commit) => {
               // マージコミットの場合はスキップ
               if (commit["parents"] && commit["parents"].length > 1) {
                 return false
@@ -36,7 +36,7 @@ jobs:
               
               return commitAuthorEmail.includes("@fullmarks.co.jp") 
           })
-          return isCheckTarget
+          return isFMsPullRequest
     
   pr-status-check:
     needs: check-commiter
@@ -103,7 +103,12 @@ jobs:
               }
 
               hasTargetFileDiffs = hasTargetFileDiffs && config.checklists.every((checkItem) => {
-                return !originalBody.includes(checkItem) // PR概要欄にすでに記載がある場合はfalse
+                // PR概要欄にすでに記載がある場合はfalse
+                // 文字列先頭の空白と記号を削除し、チェック文言のみにする
+                const checkItemText = checkItem.match(/\s*\[.*?\]\s*(.*)/)?.[1]
+
+                const checklistPattern = new RegExp(String.raw`- \[.?\] ${checkItemText}`)
+                return !checklistPattern.test(originalBody)
               })
               
               if(hasTargetFileDiffs){
