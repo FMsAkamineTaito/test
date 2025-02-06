@@ -3,7 +3,7 @@ repos:
     hooks:
       - id: test
         name: test
-        entry: echo $SHELL && echo "######"
+        entry: sh -c 'echo $SHELL; echo $0; which sh; which bash; which zsh'
         language: system
         verbose: true
         stages: [prepare-commit-msg]
