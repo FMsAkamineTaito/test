@@ -102,6 +102,10 @@ jobs:
                 })
               }
 
+              if (config.riskeyPatterns) => {
+                result +=  config.riskeyPatterns + "\n"
+              }
+
               hasTargetFileDiffs = hasTargetFileDiffs && config.checklists.every((checkItem) => {
                 // PR概要欄にすでに記載がある場合はfalse
                 // 文字列先頭の空白と記号を削除し、チェック文言のみにする
