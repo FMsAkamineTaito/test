@@ -65,9 +65,17 @@ jobs:
               repo: context.repo.repo,
               pull_number: pullRequest.number,
             })
-            const files = response.data.map((item) => item.filename).join(",")
 
+            // 差分ファイル名
+            const files = response.data.map((item) => item.filename).join(",")
             fs.appendFileSync(process.env.GITHUB_OUTPUT, `CHANGED_FILES=${files}\n`);
+
+            // 差分ファイル名: 追加差分
+            const diffData = response.data.reduce((acc, item) => {
+              acc[item.filename] = item.patch;
+              return acc;
+            }, {});
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `CHANGED_FILES_DIFF_DATA<<EOF\n${JSON.stringify(diffData)}\nEOF\n`);
             
             // PRの概要欄を取得
             const body = await github.rest.pulls.get({
@@ -87,13 +95,18 @@ jobs:
             
             let changedFiles = '${{ steps.pr_information.outputs.CHANGED_FILES }}'.split(',')
             
+            let changedFilesDiffDataString = `${{ steps.pr_information.outputs.CHANGED_FILES_DIFF_DATA }}`;
+            let changedFilesDiffData = JSON.parse(changedFilesDiffDataString);
+            
             let result = "";
 
+  
             configs.forEach((config) => {
               let hasTargetFileDiffs = false
-
+              
               if(config.path.endsWith('/')){
                 hasTargetFileDiffs = changedFiles.some((path) =>{
+                  console.log("Changed Files Diff Data:", changedFilesDiffData[path]);
                   return path.includes(config.path)  // パスが含まれているか
                 }) 
               } else {
