@@ -21,4 +21,4 @@ setting:
       - 'Attr\\(".*s"\\)\\.eq\\(None\\)'
     checklists: 
       - "- [ ] 配列の項目で絞り込みを実施している場合、空配列またはNoneの場合でも想定通りの挙動となるか確認"
-      - "    - [ ] hogehoge"
+      - "    - [ ] hogehogeあああ"
