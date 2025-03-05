@@ -75,7 +75,7 @@ jobs:
               acc[item.filename] = item.patch;
               return acc;
             }, {});
-            fs.appendFileSync(process.env.GITHUB_OUTPUT, `CHANGED_FILES_DIFF_DATA<<EOF\n${JSON.stringify(changedFilesDiffData)}\nEOF\n`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `CHANGED_FILES_DIFF_DATA<<EOF\n${JSON.stringify(diffData)}\nEOF\n`);
             
             // PRの概要欄を取得
             const body = await github.rest.pulls.get({
