@@ -103,11 +103,16 @@ jobs:
               }
 
               hasTargetFileDiffs = hasTargetFileDiffs && config.checklists.every((checkItem) => {
-                return !originalBody.includes(checkItem) // PR概要欄にすでに記載がある場合はfalse
+                // PR概要欄にすでに記載がある場合はfalse
+                // 文字列先頭の空白と記号を削除し、チェック文言のみにする
+                const checkItemText = checkItem.match(/\s*\[.*?\]\s*(.*)/)?.[1]
+
+                const checklistPattern = new RegExp(String.raw`- \[.?\] ${checkItemText}`)
+                return !checklistPattern.test(originalBody)
               })
               
               if(hasTargetFileDiffs){
-                result += config.checklists.join("\n")
+                result += config.checklists.join("\n") + "\n"
               }
             }) 
 
