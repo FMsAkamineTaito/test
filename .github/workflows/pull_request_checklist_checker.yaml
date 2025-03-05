@@ -102,7 +102,7 @@ jobs:
                 })
               }
 
-              if (config.riskeyPatterns) => {
+              if (config.riskeyPatterns) {
                 result +=  config.riskeyPatterns + "\n"
               }
 
