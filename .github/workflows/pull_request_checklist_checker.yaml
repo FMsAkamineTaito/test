@@ -151,6 +151,12 @@ jobs:
 
                 const checklistPattern = new RegExp(String.raw`- \[.?\] ${checkItemText}`)
                 return !checklistPattern.test(originalBody)
+                // PR概要欄にすでに記載がある場合はfalse
+                // 文字列先頭の空白と記号を削除し、チェック文言のみにする
+                const checkItemText = checkItem.match(/\s*\[.*?\]\s*(.*)/)?.[1]
+
+                const checklistPattern = new RegExp(String.raw`- \[.?\] ${checkItemText}`)
+                return !checklistPattern.test(originalBody)
               })
               
               if(hasTargetFileDiffs){
