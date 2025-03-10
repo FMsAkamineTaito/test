@@ -82,10 +82,6 @@ jobs:
     if: fromJSON(needs.check-commiter.outputs.should_continue) && (github.event.action == 'opened' || github.event.action == 'synchronize')
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Fetch all branches
-        run: git fetch --all
       - name: Get checklist config
         id: get_checklist_config
         uses: mikefarah/yq@master
@@ -110,6 +106,13 @@ jobs:
             const files = response.data.map((item) => item.filename).join(",")
 
             fs.appendFileSync(process.env.GITHUB_OUTPUT, `CHANGED_FILES=${files}\n`);
+
+            // 差分ファイル名: 差分詳細
+            const diffData = response.data.reduce((acc, item) => {
+              acc[item.filename] = item.patch;
+              return acc;
+            }, {});
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `CHANGED_FILES_DIFF_DATA=${JSON.stringify(diffData)}\n`);
             
             // PRの概要欄を取得
             const body = await github.rest.pulls.get({
@@ -121,14 +124,19 @@ jobs:
             return body.data.body
       - name: Update PR body
         uses: actions/github-script@v7
+        env:
+          CHANGED_FILES_DIFF_DATA: ${{ steps.pr_information.outputs.CHANGED_FILES_DIFF_DATA }}
         with:
           script: |
             let originalBody = ${{ steps.pr_information.outputs.result }} ?? ""
 
             const configs = ${{ steps.get_checklist_config.outputs.result }};
             
-            let changedFiles = '${{ steps.pr_information.outputs.CHANGED_FILES }}'.split(',')
-            
+            let changedFiles = '${{ steps.pr_information.outputs.CHANGED_FILES }}'.split(',')      
+
+            let changedFilesDiffDataString = process.env.CHANGED_FILES_DIFF_DATA ?? "{}";
+            let changedFilesDiffData = JSON.parse(changedFilesDiffDataString);
+
             let result = "";
 
             configs.forEach((config) => {
@@ -144,13 +152,25 @@ jobs:
                 })
               }
 
-              hasTargetFileDiffs = hasTargetFileDiffs && config.checklists.every((checkItem) => {
-                // PR概要欄にすでに記載がある場合はfalse
-                // 文字列先頭の空白と記号を削除し、チェック文言のみにする
-                const checkItemText = checkItem.match(/\s*\[.*?\]\s*(.*)/)?.[1]
+              // riskeyPatternsを含む差分があるか確認
+              if(hasTargetFileDiffs && config?.riskeyPatterns) {
+                hasTargetFileDiffs = Object.entries(changedFilesDiffData).some(([path, diffData]) => {
+                  if (!path.includes(config.path) || !path.endsWith(".py")) return false;
 
-                const checklistPattern = new RegExp(String.raw`- \[.?\] ${checkItemText}`)
-                return !checklistPattern.test(originalBody)
+                  // 追加行 (+ で始まる) のみ取得
+                  const addedLines = diffData
+                    .split("\n")
+                    .filter(line => line.startsWith("+"))
+                    .map(line => line.substring(1).trim());
+
+                  return config.riskeyPatterns.some(pattern => {
+                    const regex = new RegExp(pattern, "g");
+                    return addedLines.some(line => regex.test(line)); // 追加された行の中にマッチがあるか                  
+                  });
+                });
+              }
+
+              hasTargetFileDiffs = hasTargetFileDiffs && config.checklists.every((checkItem) => {
                 // PR概要欄にすでに記載がある場合はfalse
                 // 文字列先頭の空白と記号を削除し、チェック文言のみにする
                 const checkItemText = checkItem.match(/\s*\[.*?\]\s*(.*)/)?.[1]
