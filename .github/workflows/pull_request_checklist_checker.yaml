@@ -27,6 +27,14 @@ jobs:
           const repoRoot = process.env.GITHUB_WORKSPACE;
           console.log(`Repository root directory: ${repoRoot}`);
 
+          // 現在のディレクトリがGitリポジトリであるかを確認
+          try {
+            const status = execSync('git status', { cwd: repoRoot }).toString();
+            console.log(status);
+          } catch (error) {
+            console.log('Error running git status:', error);
+          }
+
           // PRに関連したコミットを取得
           const commitLists = await github.rest.pulls.listCommits({
                 owner: context.repo.owner,
