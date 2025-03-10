@@ -38,7 +38,7 @@ jobs:
           const prBranch = context.payload.pull_request.head.ref;
           console.log("PR branch :", prBranch)
           
-          const developBranches = ['origin/stage', `origin/${prBranch}`]
+          const developBranches = [''origin/master' ,'origin/stage', `origin/${prBranch}`]
 
           console.log("Dev branchs : ", developBranches)
 
@@ -70,7 +70,7 @@ jobs:
           console.log("develop commits len:", developCommits.length)
           const isCommitFromFms = developCommits.some(commit => {
               const email = commit.commit.author.email;
-              console.log("commit : ", commit.commit)
+              console.log("commit :", commit.commit.message)
               console.log("email : ", commit.commit.author.email)
               return email.endsWith(fmsDomain);
           });
