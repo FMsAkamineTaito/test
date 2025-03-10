@@ -56,7 +56,7 @@ jobs:
                   console.log("branches", branches)
 
                   // チェック対象外ブランチ以外に存在するならマージコミットとみなす
-                  const isMergeCommit = branches.every(branch => !developBranches.includes(branch));
+                  const isMergeCommit = branches.some(branch => !developBranches.includes(branch));
 
                   console.log(commit.commit.message, "is merge commit ? :", isMergeCommit)
                   return !isMergeCommit; // マージコミットでないものを残す
