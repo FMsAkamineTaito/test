@@ -57,8 +57,8 @@ jobs:
                   // コミットが含まれるリモートブランチを取得
                   const branches = execSync(`git branch -r --contains ${commitSha}`, { cwd: repoRoot }).toString().split("\n").map(b => b.trim()).filter(b => b);
 
-                  consoel.log("####")
-                  consoel.log("branches", branches)
+                  console.log("####")
+                  console.log("branches", branches)
 
                   // 開発ブランチ以外に存在するならマージコミットとみなす
                   const isMergeCommit = branches.some(branch => !developBranches.some(dev => branch.match(new RegExp(dev.replace('*', '.*')))));
