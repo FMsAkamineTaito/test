@@ -14,11 +14,29 @@ jobs:
     outputs:
       should_continue: ${{ steps.check_is_fms.outputs.result }}
     steps:
+    - uses: actions/checkout@v4
+    - name: Fetch all branches
+      run: git fetch --all
     - name: Check all commiter are FMs member
       id: check_is_fms
       uses: actions/github-script@v7
       with:
         script: |
+          const { execSync } = require('child_process');
+          const path = require('path');
+
+          // リポジトリのルートディレクトリに移動
+          const repoRoot = process.env.GITHUB_WORKSPACE;
+          console.log(`Repository root directory: ${repoRoot}`);
+
+          // 現在のディレクトリがGitリポジトリであるかを確認
+          try {
+            const status = execSync('git status', { cwd: repoRoot }).toString();
+            console.log(status);
+          } catch (error) {
+            console.log('Error running git status:', error);
+          }
+
           // PRに関連したコミットを取得
           const commitLists = await github.rest.pulls.listCommits({
                 owner: context.repo.owner,
@@ -37,10 +55,10 @@ jobs:
 
               try {
                   // コミットが含まれるリモートブランチを取得
-                  const branches = execSync(`git branch -r --contains ${commitSha}`).toString().split("\n").map(b => b.trim()).filter(b => b);
+                  const branches = execSync(`git branch -r --contains ${commitSha}`, { cwd: repoRoot }).toString().split("\n").map(b => b.trim()).filter(b => b);
 
-                  consoel.log("####")
-                  consoel.log("branches", branches)
+                  console.log("####")
+                  console.log("branches", branches)
 
                   // 開発ブランチ以外に存在するならマージコミットとみなす
                   const isMergeCommit = branches.some(branch => !developBranches.some(dev => branch.match(new RegExp(dev.replace('*', '.*')))));
@@ -65,7 +83,10 @@ jobs:
     if: fromJSON(needs.check-commiter.outputs.should_continue) && (github.event.action == 'opened' || github.event.action == 'synchronize')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Fetch all branches
+        run: git fetch --all
       - name: Get checklist config
         id: get_checklist_config
         uses: mikefarah/yq@master
