@@ -6,8 +6,8 @@
 setting: 
   - path: 'test.py'
     checklists: 
-      - '- [ ] RDS桁制限と管理画面との入力制限との整合性が取れているか'
-      - "    - [ ] "
+      - '- [ ] test'
+      - "    - [ ] test"
   - path: 'test'
     checklists:
       - "- [ ] Lambda→AWS Batchへの切替の場合、アーキテクチャ変更による影響確認（タイムアウト時間など）"
