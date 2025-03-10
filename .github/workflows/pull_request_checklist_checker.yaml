@@ -14,11 +14,19 @@ jobs:
     outputs:
       should_continue: ${{ steps.check_is_fms.outputs.result }}
     steps:
+    - uses: actions/checkout@v4
+    - name: Fetch all branches
+      run: git fetch --all
     - name: Check all commiter are FMs member
       id: check_is_fms
       uses: actions/github-script@v7
       with:
         script: |
+          const { execSync } = require('child_process');
+          const path = require('path');
+
+          const repoRoot = process.env.GITHUB_WORKSPACE;
+
           // PRに関連したコミットを取得
           const commitLists = await github.rest.pulls.listCommits({
                 owner: context.repo.owner,
@@ -26,10 +34,15 @@ jobs:
                 pull_number: context.payload.pull_request.number
           });
 
-          // 開発ブランチとして扱うもの
-          const developBranches = ['origin/develop', 'origin/stage', 'origin/feature/*', 'origin/bugfix/*']
+          // チェック対象外ブランチ
+          const prBranch = context.payload.pull_request.head.ref;
+          console.log("PR branch :", prBranch)
+          
+          const developBranches = ['origin/master' ,'origin/stage', `origin/${prBranch}`]
 
-          const allowedDomain = "@fullmarks.co.jp"
+          console.log("Dev branchs : ", developBranches)
+
+          const fmsDomain = "@fullmarks.co.jp"
 
           // マージコミット以外のコミットをフィルタリング
           const developCommits = commitLists.data.filter(commit => {
@@ -37,35 +50,42 @@ jobs:
 
               try {
                   // コミットが含まれるリモートブランチを取得
-                  const branches = execSync(`git branch -r --contains ${commitSha}`).toString().split("\n").map(b => b.trim()).filter(b => b);
+                  const branches = execSync(`git branch -r --contains ${commitSha}`, { cwd: repoRoot }).toString().split("\n").map(b => b.trim()).filter(b => b);
 
-                  consoel.log("####")
-                  consoel.log("branches", branches)
+                  console.log("####")
+                  console.log("branches", branches)
 
-                  // 開発ブランチ以外に存在するならマージコミットとみなす
-                  const isMergeCommit = branches.some(branch => !developBranches.some(dev => branch.match(new RegExp(dev.replace('*', '.*')))));
+                  // チェック対象外ブランチ以外に存在するならマージコミットとみなす
+                  const isMergeCommit = branches.every(branch => !developBranches.includes(branch));
 
                   console.log(commit.commit.message, "is merge commit ? :", isMergeCommit)
                   return !isMergeCommit; // マージコミットでないものを残す
               } catch (error) {
                   console.log(`Error checking commit ${commitSha}:`, error);
-                  return false;
+                  // エラーが起きた場合はチェック対象外とする
+                  return false
               }
           })
-            
-          const isExistFMsEmployee = developCommits.some(commit => {
+          
+          console.log("develop commits len:", developCommits.length)
+          const isCommitFromFms = developCommits.some(commit => {
               const email = commit.commit.author.email;
-              return email.endsWith(allowedDomain);
+              console.log("commit :", commit.commit.message)
+              console.log("email : ", commit.commit.author.email)
+              return email.endsWith(fmsDomain);
           });
 
-          return isExistFMsEmployee
+          return isCommitFromFms
     
   pr-status-check:
     needs: check-commiter
     if: fromJSON(needs.check-commiter.outputs.should_continue) && (github.event.action == 'opened' || github.event.action == 'synchronize')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Fetch all branches
+        run: git fetch --all
       - name: Get checklist config
         id: get_checklist_config
         uses: mikefarah/yq@master
