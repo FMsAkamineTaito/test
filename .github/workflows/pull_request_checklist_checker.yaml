@@ -20,6 +20,12 @@ jobs:
       with:
         script: |
           const { execSync } = require('child_process');
+          const path = require('path');
+
+          // リポジトリのルートディレクトリに移動
+          const repoRoot = process.env.GITHUB_WORKSPACE;
+          console.log(`Repository root directory: ${repoRoot}`);
+          
           // PRに関連したコミットを取得
           const commitLists = await github.rest.pulls.listCommits({
                 owner: context.repo.owner,
