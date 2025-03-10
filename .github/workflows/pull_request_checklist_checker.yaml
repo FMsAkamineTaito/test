@@ -66,11 +66,12 @@ jobs:
                   return false
               }
           })
-            
+          
+          console.log("develop commits len:", developCommits.lenght)
           const isCommitFromFms = developCommits.some(commit => {
               const email = commit.commit.author.email;
-              console.log("commit : ", commit)
-              console.log("email : ", commit.author.email)
+              console.log("commit : ", commit.commit)
+              console.log("email : ", commit.commit.author.email)
               return email.endsWith(fmsDomain);
           });
 
