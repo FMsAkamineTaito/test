@@ -12,3 +12,13 @@ setting:
     checklists:
       - "- [ ] Lambda→AWS Batchへの切替の場合、アーキテクチャ変更による影響確認（タイムアウト時間など）"
       - "    - [ ] "
+  - path: 'api/' # TODO
+    riskeyPatterns:
+      - 'Key\\(".*s"\\)\\.eq\\(\\[\\]\\)'
+      - 'Key\\(".*s"\\)\\.eq\\(None\\)'
+      - 'Attr\\(".*s"\\)\\.not_exists\\(\\)'
+      - 'Attr\\(".*s"\\)\\.eq\\(\\[\\]\\)'
+      - 'Attr\\(".*s"\\)\\.eq\\(None\\)'
+    checklists: 
+      - "- [ ] 配列の項目で絞り込みを実施している場合、空配列またはNoneの場合でも想定通りの挙動となるか確認"
+      - "    - [ ] hogehoge"

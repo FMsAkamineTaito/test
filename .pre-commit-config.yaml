@@ -1,8 +1,16 @@
 repos:
-  - repo: https://github.com/FULL-MARKS-INC/code-checker
-    rev: d6095f00b01558ded87757eab8a12944d02e223c
+  - repo: local
     hooks:
-      - id: pr-status-checker
+      - id: test
+        name: test
+        entry: sh -c 'echo $SHELL; echo $0; which sh; which bash; which zsh'
+        language: system
+        verbose: true
+        stages: [prepare-commit-msg]
+  - repo: https://github.com/FMsAkamineTaito/pre-commit-test
+    rev: 1e2c2d8960b8df1419c9e39f4dc4cdddbbde41ae
+    hooks:
+      - id: pr-status-check
         pass_filenames: false
         verbose: true
         stages: [prepare-commit-msg]
