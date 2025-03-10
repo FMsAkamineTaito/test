@@ -25,7 +25,7 @@ jobs:
           // リポジトリのルートディレクトリに移動
           const repoRoot = process.env.GITHUB_WORKSPACE;
           console.log(`Repository root directory: ${repoRoot}`);
-          
+
           // PRに関連したコミットを取得
           const commitLists = await github.rest.pulls.listCommits({
                 owner: context.repo.owner,
@@ -44,7 +44,7 @@ jobs:
 
               try {
                   // コミットが含まれるリモートブランチを取得
-                  const branches = execSync(`git branch -r --contains ${commitSha}`).toString().split("\n").map(b => b.trim()).filter(b => b);
+                  const branches = execSync(`git branch -r --contains ${commitSha}`, { cwd: repoRoot }).toString().split("\n").map(b => b.trim()).filter(b => b);
 
                   consoel.log("####")
                   consoel.log("branches", branches)
