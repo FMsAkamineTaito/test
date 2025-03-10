@@ -25,17 +25,7 @@ jobs:
           const { execSync } = require('child_process');
           const path = require('path');
 
-          // リポジトリのルートディレクトリに移動
           const repoRoot = process.env.GITHUB_WORKSPACE;
-          console.log(`Repository root directory: ${repoRoot}`);
-
-          // 現在のディレクトリがGitリポジトリであるかを確認
-          try {
-            const status = execSync('git status', { cwd: repoRoot }).toString();
-            console.log(status);
-          } catch (error) {
-            console.log('Error running git status:', error);
-          }
 
           // PRに関連したコミットを取得
           const commitLists = await github.rest.pulls.listCommits({
@@ -44,10 +34,15 @@ jobs:
                 pull_number: context.payload.pull_request.number
           });
 
-          // 開発ブランチとして扱うもの
-          const developBranches = ['origin/develop', 'origin/stage', 'origin/feature/*', 'origin/bugfix/*']
+          // チェック対象外ブランチ
+          const prBranch = context.payload.pull_request.head.ref;
+          console.log("PR branch :", prBranch)
+          
+          const developBranches = ['origin/stage', prBranch]
 
-          const allowedDomain = "@fullmarks.co.jp"
+          console.log("Dev branchs : ", developBranches)
+
+          const fmsDomain = "@fullmarks.co.jp"
 
           // マージコミット以外のコミットをフィルタリング
           const developCommits = commitLists.data.filter(commit => {
@@ -60,8 +55,8 @@ jobs:
                   console.log("####")
                   console.log("branches", branches)
 
-                  // 開発ブランチ以外に存在するならマージコミットとみなす
-                  const isMergeCommit = branches.some(branch => !developBranches.some(dev => branch.match(new RegExp(dev.replace('*', '.*')))));
+                  // チェック対象外ブランチ以外に存在するならマージコミットとみなす
+                  const isMergeCommit = branches.every(branch => !developBranches.includes(branch));
 
                   console.log(commit.commit.message, "is merge commit ? :", isMergeCommit)
                   return !isMergeCommit; // マージコミットでないものを残す
@@ -73,7 +68,7 @@ jobs:
             
           const isExistFMsEmployee = developCommits.some(commit => {
               const email = commit.commit.author.email;
-              return email.endsWith(allowedDomain);
+              return email.endsWith(fmsDomain);
           });
 
           return isExistFMsEmployee
