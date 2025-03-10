@@ -67,7 +67,7 @@ jobs:
               }
           })
           
-          console.log("develop commits len:", developCommits.lenght)
+          console.log("develop commits len:", developCommits.length)
           const isCommitFromFms = developCommits.some(commit => {
               const email = commit.commit.author.email;
               console.log("commit : ", commit.commit)
