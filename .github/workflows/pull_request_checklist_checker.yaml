@@ -73,7 +73,10 @@ jobs:
     if: fromJSON(needs.check-commiter.outputs.should_continue) && (github.event.action == 'opened' || github.event.action == 'synchronize')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Fetch all branches
+        run: git fetch --all
       - name: Get checklist config
         id: get_checklist_config
         uses: mikefarah/yq@master
