@@ -38,7 +38,7 @@ jobs:
           const prBranch = context.payload.pull_request.head.ref;
           console.log("PR branch :", prBranch)
           
-          const developBranches = ['origin/stage', prBranch]
+          const developBranches = ['origin/stage', `origin/${prBranch}`]
 
           console.log("Dev branchs : ", developBranches)
 
