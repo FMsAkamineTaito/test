@@ -15,10 +15,8 @@ jobs:
       should_continue: ${{ steps.check_is_fms.outputs.result }}
     steps:
     - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    # - name: Fetch all branches
-    #   run: git fetch --all
+    - name: Fetch all branches
+      run: git fetch --all
     - name: Check all commiter are FMs member
       id: check_is_fms
       uses: actions/github-script@v7
@@ -37,7 +35,7 @@ jobs:
           console.log("head sha", headSha)
 
           const commiterEmails = execSync(
-            `git log --ancestry-path --no-merges ${baseSha}..${headSha} --pretty=format:"%ae"`,
+            `git log --first-parent ${baseSha}..${headSha} --pretty=format:"%ae"`,
             { cwd: repoRoot },
           )
             .toString()
