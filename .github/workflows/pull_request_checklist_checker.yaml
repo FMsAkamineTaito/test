@@ -35,7 +35,7 @@ jobs:
           console.log("head sha", headSha)
 
           let commiterEmails = execSync(
-            `git log --first-parent ${baseSha}..${headSha} --pretty=format:"############## %n %H %ae %n %D %n ##############"`,
+            `git log --first-parent ${baseSha}..${headSha} --pretty=format:"############## %n %H %ae %n %b %n %D %n ##############"`,
             { cwd: repoRoot },
           )
           console.log(commiterEmails.toString())
