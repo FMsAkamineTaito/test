@@ -31,8 +31,8 @@ jobs:
           const repoRoot = process.env.GITHUB_WORKSPACE
           const fmsDomain = '@fullmarks.co.jp'
 
-          conosle.log("base sha", baseSha)
-          consoel.log("head sha", headSha)
+          console.log("base sha", baseSha)
+          console.log("head sha", headSha)
 
           const commiterEmails = execSync(
             `git log --ancestry-path --no-merges ${baseSha}..${headSha} --pretty=format:"%ae"`,
