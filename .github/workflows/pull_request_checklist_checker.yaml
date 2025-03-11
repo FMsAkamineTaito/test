@@ -32,7 +32,7 @@ jobs:
           const fmsDomain = '@fullmarks.co.jp'
 
           const commiterEmails = execSync(
-            `git log --ancestry-path --no-merges ${baseSha}..${headSha} --pretty=format:"%ae"`,
+            `git log --first-parent ${baseSha}..${headSha} --pretty=format:"%ae"`,
             { cwd: repoRoot },
           )
             .toString()
