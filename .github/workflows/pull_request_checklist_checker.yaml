@@ -35,10 +35,14 @@ jobs:
           console.log("head sha", headSha)
 
           const commiterEmails = execSync(
-            `git log --first-parent ${baseSha}..${headSha} --pretty=format:"%ae"`,
+            `git log --first-parent ${baseSha}..${headSha} --pretty=format:"%ae"
+            --pretty=format:"############## %n %H %ae %n %D %n ##############"
+            `,
             { cwd: repoRoot },
           )
-            .toString()
+          console.log(commiterEmails)
+
+          commiterEmails.toString()
             .split('\n')
             .map((b) => b.trim())  // 前後の空白削除 
             .filter((b) => b)  // 空白行削除
