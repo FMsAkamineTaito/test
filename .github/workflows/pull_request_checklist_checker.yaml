@@ -35,13 +35,13 @@ jobs:
           console.log("head sha", headSha)
 
           let commiterEmails = execSync(
-            `git log --no-merges --ancestry-path ${baseSha}..${headSha} --pretty=format:"%ae`,
+            `git log --no-merges --ancestry-path ${baseSha}..${headSha} --pretty=format:"%ae"`,
             { cwd: repoRoot },
           )
           console.log(commiterEmails.toString())
 
           commiterEmails = execSync(
-            `git log --no-merges --ancestry-path ${baseSha}..${headSha} --pretty=format:"%ae`,
+            `git log --no-merges --ancestry-path ${baseSha}..${headSha} --pretty=format:"%ae"`,
             { cwd: repoRoot },
           ).toString()
             .split('\n')
